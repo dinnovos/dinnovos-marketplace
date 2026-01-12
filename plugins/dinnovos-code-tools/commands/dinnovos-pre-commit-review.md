@@ -1,5 +1,5 @@
 ---
-name: pre-commit-review
+name: dinnovos-pre-commit-review
 description: Auditoría completa de cambios pendientes antes del commit - detecta bugs, problemas de calidad, seguridad y oportunidades de mejora
 model: opus
 allowed-tools: ["Bash", "Read", "Grep"]

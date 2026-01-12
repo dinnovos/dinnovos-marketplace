@@ -1,4 +1,5 @@
 ---
+name: dinnovos-auto-commit
 description: Analiza los cambios pendientes y crea un commit con mensaje descriptivo siguiendo Conventional Commits
 allowed-tools: ["Bash", "Read", "Grep"]
 model: haiku
