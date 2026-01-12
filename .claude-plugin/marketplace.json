@@ -1,0 +1,16 @@
+{
+  "name": "dinnovos-marketplace",
+  "description": "Comandos de análisis de código para Claude Code - Code Review, Security, Performance, Refactoring",
+  "owner": {
+    "name": "Dinnovos",
+    "email": "tu-email@ejemplo.com",
+    "url": "https://github.com/TU_USUARIO"
+  },
+  "plugins": [
+    {
+      "name": "dinnovos-code-tools",
+      "source": "./plugins/dinnovos-code-tools",
+      "description": "Suite completa de análisis de código: review, seguridad, rendimiento, refactoring. Soporta JS/TS, Python, Go, Rust, PHP, Ruby, Java, C#"
+    }
+  ]
+}
