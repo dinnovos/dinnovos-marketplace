@@ -144,6 +144,7 @@ Muestra el resultado:
 6. **Si hay muchos cambios diversos**, pregunta al usuario si quiere:
    - Un solo commit general
    - Dividir en múltiples commits
+7. **NO agregues "Co-Authored-By"** — El mensaje debe ser limpio, sin líneas de co-autoría de IA
 
 ## Verificación previa al commit
 
