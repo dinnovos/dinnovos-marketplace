@@ -1,11 +1,11 @@
 {
   "name": "dinnovos-code-tools",
   "version": "1.0.0",
-  "description": "Suite completa de análisis de código: commands, agents, y skills. Incluye code review, security scan, performance audit, arquitectura, testing. Soporta JS/TS, Python, Go, Rust, PHP, Ruby, Java, C#.",
+  "description": "Suite completa de análisis de código para Claude Code. Incluye code review, security scan, performance audit, refactoring y más. Soporta JS/TS, Python, Go, Rust, PHP, Ruby, Java, C#.",
   "author": {
     "name": "Dinnovos",
-    "email": "tu-email@ejemplo.com",
-    "url": "https://github.com/TU_USUARIO"
+    "email": "pycodeve@gmail.com",
+    "url": "https://github.com/dinnovos"
   },
   "license": "MIT",
   "keywords": [
@@ -23,8 +23,6 @@
     "rust"
   ],
   "components": {
-    "commands": ["commands/"],
-    "agents": ["agents/"],
-    "skills": ["skills/"]
+    "commands": ["commands/"]
   }
 }

@@ -3,8 +3,8 @@
   "description": "Comandos de análisis de código para Claude Code - Code Review, Security, Performance, Refactoring",
   "owner": {
     "name": "Dinnovos",
-    "email": "tu-email@ejemplo.com",
-    "url": "https://github.com/TU_USUARIO"
+    "email": "pycodeve@gmail.com",
+    "url": "https://github.com/dinnovos"
   },
   "plugins": [
     {
