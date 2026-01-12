@@ -21,8 +21,5 @@
     "python",
     "golang",
     "rust"
-  ],
-  "components": {
-    "commands": ["commands/"]
-  }
+  ]
 }
