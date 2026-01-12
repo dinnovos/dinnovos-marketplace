@@ -1,13 +1,13 @@
 ---
 name: dinnovos-performance-audit
-description: Detecta problemas de rendimiento - queries lentas, memory leaks, bundle size, lazy loading, algoritmos ineficientes. Solo lectura.
+description: Detecta problemas de rendimiento - queries lentas, memory leaks, bundle size, lazy loading, algoritmos ineficientes. Soporta múltiples lenguajes. Solo lectura.
 model: opus
 allowed-tools: ["Bash(read-only)", "Read", "Grep", "Glob"]
 ---
 
 # Auditoría de Rendimiento
 
-Analiza el código en busca de problemas de rendimiento y oportunidades de optimización. **Solo lectura, no modifica nada.**
+Analiza el código en busca de problemas de rendimiento y oportunidades de optimización. **Solo lectura, no modifica nada. Soporta múltiples lenguajes.**
 
 ## Entrada del Usuario
 
@@ -16,6 +16,7 @@ El usuario puede especificar qué auditar de varias formas:
 **Ruta exacta:**
 - `/dinnovos-performance-audit src/`
 - `/dinnovos-performance-audit src/services/dataService.ts`
+- `/dinnovos-performance-audit app/handlers/`
 
 **Lenguaje natural (ejemplos ilustrativos):**
 - `/dinnovos-performance-audit analiza rendimiento de <módulo>`
@@ -41,28 +42,18 @@ Buscar archivos que coincidan con la descripción:
 
 ```bash
 # Explorar estructura del proyecto
-find . -type f \( -name "*.ts" -o -name "*.tsx" -o -name "*.js" -o -name "*.jsx" -o -name "*.py" \) | grep -v node_modules | grep -v dist | grep -v .git
+find . -type f \( -name "*.ts" -o -name "*.tsx" -o -name "*.js" -o -name "*.jsx" -o -name "*.py" -o -name "*.go" -o -name "*.rs" -o -name "*.java" \) \
+  ! -path "*/node_modules/*" ! -path "*/.git/*" ! -path "*/dist/*" ! -path "*/build/*" ! -path "*/target/*"
 
 # Buscar por nombre relacionado
 find . -type f -iname "*<término>*" | grep -v node_modules
 find . -type d -iname "*<término>*" | grep -v node_modules
 
 # Buscar contenido relacionado
-grep -ril "<término>" --include="*.ts" --include="*.tsx" --include="*.js" | grep -v node_modules | head -30
+grep -ril "<término>" --include="*.ts" --include="*.tsx" --include="*.js" --include="*.py" --include="*.go" | grep -v node_modules | head -30
 ```
 
 **Confirma con el usuario** si encuentras múltiples coincidencias.
-
-### Si no se especificó nada:
-Auditar todo el proyecto:
-
-```bash
-find . -type f \( -name "*.ts" -o -name "*.tsx" -o -name "*.js" -o -name "*.jsx" -o -name "*.py" -o -name "*.java" -o -name "*.go" \) \
-  ! -path "*/node_modules/*" \
-  ! -path "*/.git/*" \
-  ! -path "*/dist/*" \
-  ! -path "*/build/*"
-```
 
 **Límite:** Máximo 100 archivos. Si hay más, pide acotar o prioriza por riesgo.
 
@@ -75,16 +66,14 @@ find . -type f \( -name "*.ts" -o -name "*.tsx" -o -name "*.js" -o -name "*.jsx"
 cat CLAUDE.md 2>/dev/null
 cat AGENTS.md 2>/dev/null
 
+# Detectar stack
+cat package.json pyproject.toml go.mod Cargo.toml composer.json 2>/dev/null
+
 # Configuración de build y bundle
-cat package.json 2>/dev/null
 cat webpack.config.js 2>/dev/null
 cat vite.config.ts 2>/dev/null
 cat next.config.js 2>/dev/null
 cat tsconfig.json 2>/dev/null
-
-# Dependencias (para detectar librerías pesadas)
-cat package-lock.json 2>/dev/null | head -500
-cat yarn.lock 2>/dev/null | head -500
 ```
 
 ---
@@ -100,7 +89,7 @@ Lee cada archivo y realiza el análisis de rendimiento completo.
 
 ---
 
-## Paso 4: Categorías de Análisis
+## Paso 4: Análisis por Categorías
 
 ### 🔴 P0 - CRÍTICO: Bloqueos y Crashes
 
@@ -112,146 +101,233 @@ Problemas que causan degradación severa:
 - **Recursión sin límite** o caso base incorrecto
 - **Deadlocks** en código concurrente
 
+#### Ejemplos por lenguaje:
+
+**JavaScript/TypeScript:**
+```javascript
+// ❌ Operación síncrona bloqueante
+const data = fs.readFileSync('huge-file.json')
+
+// ❌ Loop infinito potencial
+while (condition) { /* sin break */ }
+```
+
+**Python:**
+```python
+# ❌ Carga todo en memoria
+data = file.read()  # archivo de 10GB
+
+# ❌ Recursión sin límite
+def recursive(n):
+    return recursive(n)  # sin caso base
+```
+
+**Go:**
+```go
+// ❌ Goroutine leak
+go func() {
+    for { /* sin salida */ }
+}()
+
+// ❌ Deadlock
+mu.Lock()
+mu.Lock()  // mismo mutex
+```
+
+**Rust:**
+```rust
+// ❌ Loop sin salida
+loop { /* sin break */ }
+```
+
 ---
 
 ### 🟠 P1 - ALTO: Algoritmos Ineficientes
 
-Problemas de complejidad algorítmica:
+Problemas de complejidad algorítmica.
 
-#### Operaciones O(n²) o peores
+#### O(n²) → O(n) por lenguaje:
+
+**JavaScript/TypeScript:**
 ```javascript
-// ❌ Malo: O(n²)
-array1.forEach(item1 => {
-  array2.forEach(item2 => {
-    if (item1.id === item2.id) { ... }
-  });
-});
+// ❌ O(n²)
+arr1.forEach(a => arr2.find(b => b.id === a.id))
+items.filter(i => ids.includes(i.id))
 
-// ✅ Mejor: O(n)
-const map = new Map(array2.map(item => [item.id, item]));
-array1.forEach(item1 => {
-  const item2 = map.get(item1.id);
-});
+// ✅ O(n)
+const map = new Map(arr2.map(b => [b.id, b]))
+const idSet = new Set(ids)
+items.filter(i => idSet.has(i.id))
 ```
 
-#### Búsquedas repetidas en arrays
-```javascript
-// ❌ Malo: includes/find en cada iteración
-items.filter(item => selectedIds.includes(item.id));
+**Python:**
+```python
+# ❌ O(n²)
+[x for x in list1 if x in list2]
 
-// ✅ Mejor: usar Set
-const selectedSet = new Set(selectedIds);
-items.filter(item => selectedSet.has(item.id));
+# ✅ O(n)
+set2 = set(list2)
+[x for x in list1 if x in set2]
 ```
 
-#### Ordenamientos innecesarios
-```javascript
-// ❌ Malo: ordenar en cada render
-{items.sort((a, b) => a.date - b.date).map(...)}
+**Go:**
+```go
+// ❌ O(n²)
+for _, a := range slice1 {
+    for _, b := range slice2 {
+        if a.ID == b.ID { ... }
+    }
+}
 
-// ✅ Mejor: memoizar
-const sortedItems = useMemo(() => 
-  [...items].sort((a, b) => a.date - b.date), [items]);
+// ✅ O(n)
+m := make(map[string]Item, len(slice2))
+for _, b := range slice2 { m[b.ID] = b }
+```
+
+**Rust:**
+```rust
+// ❌ O(n²)
+for a in &vec1 {
+    if vec2.contains(a) { ... }
+}
+
+// ✅ O(n)
+let set: HashSet<_> = vec2.iter().collect();
 ```
 
 ---
 
-### 🟠 P1 - ALTO: Problemas de Base de Datos
+### 🟠 P1 - ALTO: Queries N+1
 
-#### Queries N+1
+**JavaScript/TypeScript:**
 ```javascript
-// ❌ Malo: N+1 queries
-const users = await User.findAll();
+// ❌ N+1
+const users = await User.findAll()
 for (const user of users) {
-  user.orders = await Order.findByUserId(user.id); // N queries
+    user.orders = await Order.findByUser(user.id)
 }
 
-// ✅ Mejor: eager loading o join
-const users = await User.findAll({ include: Order });
+// ✅ Eager loading
+const users = await User.findAll({ include: Order })
 ```
 
-#### Falta de índices (detectar por patrones)
-```javascript
-// Buscar: WHERE/find por campos que deberían tener índice
-findBy({ email: ... })  // email debería tener índice
-findBy({ status: ..., createdAt: ... })  // índice compuesto
+**Python:**
+```python
+# ❌ N+1
+users = User.query.all()
+for user in users:
+    orders = Order.query.filter_by(user_id=user.id).all()
+
+# ✅ Eager loading
+users = User.query.options(joinedload(User.orders)).all()
 ```
 
-#### Queries sin límite
-```javascript
-// ❌ Malo: sin paginación
-const allUsers = await User.findAll();
+**Go:**
+```go
+// ❌ N+1
+for _, user := range users {
+    orders, _ := db.Query("SELECT * FROM orders WHERE user_id = ?", user.ID)
+}
 
-// ✅ Mejor: paginado
-const users = await User.findAll({ limit: 50, offset: page * 50 });
-```
-
-#### SELECT * cuando solo se necesitan campos específicos
-```javascript
-// ❌ Malo: trae todo
-const users = await db.query('SELECT * FROM users');
-
-// ✅ Mejor: solo lo necesario
-const users = await db.query('SELECT id, name FROM users');
+// ✅ Batch
+db.Query("SELECT * FROM orders WHERE user_id IN (?)", userIDs)
 ```
 
 ---
 
 ### 🟠 P1 - ALTO: Memory Leaks
 
-#### Event listeners sin cleanup
+**JavaScript/TypeScript:**
 ```javascript
-// ❌ Malo: nunca se remueve
+// ❌ Event listener leak
 useEffect(() => {
-  window.addEventListener('resize', handleResize);
-}, []);
+    window.addEventListener('resize', handler)
+}, [])
 
-// ✅ Mejor: cleanup
+// ✅ Con cleanup
 useEffect(() => {
-  window.addEventListener('resize', handleResize);
-  return () => window.removeEventListener('resize', handleResize);
-}, []);
+    window.addEventListener('resize', handler)
+    return () => window.removeEventListener('resize', handler)
+}, [])
 ```
 
-#### Subscripciones sin unsubscribe
-```javascript
-// ❌ Malo: subscription leak
-useEffect(() => {
-  const sub = observable.subscribe(handler);
-}, []);
+**Python:**
+```python
+# ❌ Conexión no cerrada
+conn = psycopg2.connect(...)
+cursor = conn.cursor()
 
-// ✅ Mejor: cleanup
-useEffect(() => {
-  const sub = observable.subscribe(handler);
-  return () => sub.unsubscribe();
-}, []);
+# ✅ Context manager
+with psycopg2.connect(...) as conn:
+    with conn.cursor() as cursor:
+        ...
 ```
 
-#### Timers sin clear
-```javascript
-// ❌ Malo: interval nunca se limpia
-useEffect(() => {
-  setInterval(poll, 5000);
-}, []);
+**Go:**
+```go
+// ❌ Goroutine leak
+go func() {
+    for { <-ch }  // ch nunca cierra
+}()
 
-// ✅ Mejor: cleanup
-useEffect(() => {
-  const id = setInterval(poll, 5000);
-  return () => clearInterval(id);
-}, []);
+// ✅ Con context
+go func(ctx context.Context) {
+    for {
+        select {
+        case <-ctx.Done(): return
+        case <-ch: ...
+        }
+    }
+}(ctx)
 ```
 
-#### Closures que retienen referencias grandes
-```javascript
-// ❌ Malo: retiene todo heavyData
-function createHandler(heavyData) {
-  return () => console.log(heavyData.length);
-}
+---
 
-// ✅ Mejor: solo lo necesario
-function createHandler(dataLength) {
-  return () => console.log(dataLength);
-}
+### 🟡 P2 - MEDIO: String Concatenation
+
+| Lenguaje | ❌ Malo (en loop) | ✅ Bueno |
+|----------|------------------|---------|
+| JS/TS | `result += str` | `parts.join('')` |
+| Python | `result += s` | `''.join(strings)` |
+| Go | `result += s` | `strings.Builder` |
+| Rust | múltiples `push_str` | `String::with_capacity` |
+| Java | `result += s` | `StringBuilder` |
+
+---
+
+### 🟡 P2 - MEDIO: Falta de Memoización
+
+**JavaScript/TypeScript:**
+```javascript
+// ❌ Recalcula cada render
+const sorted = items.sort(...)
+
+// ✅ Memoizado
+const sorted = useMemo(() => [...items].sort(...), [items])
+```
+
+**Python:**
+```python
+# ❌ Recalcula siempre
+def expensive(n): return sum(range(n))
+
+# ✅ Con cache
+@lru_cache(maxsize=128)
+def expensive(n): return sum(range(n))
+```
+
+---
+
+### 🟡 P2 - MEDIO: Imports Pesados
+
+```javascript
+// ❌ Import completo
+import _ from 'lodash'        // ~70KB
+import moment from 'moment'   // ~300KB
+
+// ✅ Import específico
+import debounce from 'lodash/debounce'
+import { format } from 'date-fns'
 ```
 
 ---
@@ -278,35 +354,13 @@ const handleClickMemo = useCallback(() => handleClick(id), [id]);
 <VirtualList items={items} renderItem={item => <Row {...item} />} />
 ```
 
-#### Imágenes sin optimizar
-```javascript
-// ❌ Malo: imagen original
-<img src="/photo.jpg" />
-
-// ✅ Mejor: responsive y lazy
-<img 
-  src="/photo.jpg" 
-  srcSet="/photo-400.jpg 400w, /photo-800.jpg 800w"
-  loading="lazy"
-/>
-```
-
-#### Falta de lazy loading en rutas/componentes
+#### Falta de lazy loading
 ```javascript
 // ❌ Malo: importa todo upfront
 import HeavyComponent from './HeavyComponent';
 
 // ✅ Mejor: lazy load
 const HeavyComponent = lazy(() => import('./HeavyComponent'));
-```
-
-#### Bundle size excesivo
-```javascript
-// ❌ Malo: importa toda la librería
-import _ from 'lodash';
-
-// ✅ Mejor: importa solo lo necesario
-import debounce from 'lodash/debounce';
 ```
 
 ---
@@ -330,18 +384,6 @@ async function getConfig() {
 }
 ```
 
-#### Operaciones síncronas costosas en hot paths
-```javascript
-// ❌ Malo: JSON.parse en cada request
-app.get('/data', (req, res) => {
-  const data = JSON.parse(fs.readFileSync('large-file.json'));
-});
-
-// ✅ Mejor: cargar una vez
-const data = JSON.parse(fs.readFileSync('large-file.json'));
-app.get('/data', (req, res) => res.json(data));
-```
-
 #### Falta de connection pooling
 ```javascript
 // ❌ Malo: nueva conexión por request
@@ -359,65 +401,21 @@ async function query(sql) {
 }
 ```
 
-#### Procesamiento en request que debería ser async
-```javascript
-// ❌ Malo: bloquea el request
-app.post('/report', async (req, res) => {
-  const report = await generateHeavyReport(req.body); // 30 segundos
-  res.json(report);
-});
-
-// ✅ Mejor: job queue
-app.post('/report', async (req, res) => {
-  const jobId = await queue.add('generateReport', req.body);
-  res.json({ jobId, status: 'processing' });
-});
-```
-
 ---
 
-### 🟡 P2 - MEDIO: Cálculos Repetidos
+### 🔵 P3 - BAJO: Micro-optimizaciones
 
-#### Sin memoización
-```javascript
-// ❌ Malo: recalcula siempre
-function Component({ items }) {
-  const total = items.reduce((sum, item) => sum + item.price, 0);
-  const sorted = items.sort((a, b) => a.name.localeCompare(b.name));
-}
+- Console/print en loops
+- Regex compilado en cada llamada
+- Spread/clone innecesario
+- Async/await en operaciones síncronas
 
-// ✅ Mejor: memoizar
-function Component({ items }) {
-  const total = useMemo(() => 
-    items.reduce((sum, item) => sum + item.price, 0), [items]);
-  const sorted = useMemo(() => 
-    [...items].sort((a, b) => a.name.localeCompare(b.name)), [items]);
-}
-```
-
-#### Regex compilados en cada llamada
-```javascript
-// ❌ Malo: compila regex cada vez
-function validate(email) {
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-}
-
-// ✅ Mejor: compilar una vez
-const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-function validate(email) {
-  return EMAIL_REGEX.test(email);
-}
-```
-
----
-
-### 🔵 P3 - BAJO: Optimizaciones Menores
-
-- **Console.log en producción**: Afecta rendimiento en loops
-- **Spread innecesario**: `{...obj}` cuando no se necesita copia
-- **Async/await en operaciones síncronas**: Overhead innecesario
-- **Concatenación de strings en loops**: Usar array.join()
-- **Múltiples accesos a DOM**: Cachear referencias
+| Lenguaje | Debugging a remover |
+|----------|---------------------|
+| JS/TS | `console.log` en loops |
+| Python | `print()` en loops |
+| Go | `fmt.Println` debug |
+| Rust | `println!`, `dbg!` |
 
 ---
 
@@ -430,6 +428,7 @@ function validate(email) {
 
 **Fecha:** [fecha actual]
 **Alcance:** `[ruta, descripción o "proyecto completo"]`
+**Lenguaje(s):** [detectados]
 **Archivos analizados:** [número]
 **Líneas de código:** ~[número]
 
@@ -537,26 +536,6 @@ function validate(email) {
 | `moment` | ~300KB | Formateo fechas | `date-fns` (~30KB) |
 | `lodash` | ~70KB | 2 funciones | Import específico |
 
-### Imports Optimizables
-```javascript
-// ❌ Actual
-import _ from 'lodash';
-
-// ✅ Sugerido
-import debounce from 'lodash/debounce';
-```
-
----
-
-## 🎯 Métricas Clave a Monitorear
-
-| Métrica | Estado Actual | Objetivo |
-|---------|---------------|----------|
-| Queries por request | [Desconocido/Alto/OK] | < 10 |
-| Bundle size (JS) | [Desconocido/Grande/OK] | < 200KB |
-| Memory leaks | [X detectados] | 0 |
-| Componentes sin memo | [X detectados] | Minimizar |
-
 ---
 
 ## 📋 Plan de Optimización
@@ -585,10 +564,12 @@ import debounce from 'lodash/debounce';
 
 ## 🛠️ Herramientas Recomendadas
 
-Para validar y monitorear:
-- **Frontend:** React DevTools Profiler, Lighthouse, Bundle Analyzer
-- **Backend:** APM (DataDog, New Relic), Query analyzers
-- **General:** Chrome DevTools Performance tab
+| Lenguaje | Herramienta |
+|----------|-------------|
+| JS/TS | Lighthouse, Bundle Analyzer, React DevTools Profiler |
+| Python | cProfile, py-spy |
+| Go | pprof |
+| Rust | cargo flamegraph |
 ```
 
 ---
@@ -596,14 +577,15 @@ Para validar y monitorear:
 ## Reglas de Operación
 
 1. **Solo lectura**: No modificar ningún archivo, solo analizar y reportar
-2. **Interpreta inteligentemente**: Buscar archivos relacionados con lo que pida el usuario
-3. **Confirma si hay ambigüedad**: Si hay múltiples coincidencias, pregunta
-4. **Sé específico**: Indica archivos, líneas y código exacto
-5. **Cuantifica cuando sea posible**: "O(n²) en array de 10K items = ~100M operaciones"
-6. **Prioriza por impacto**: Bloqueos > Algoritmos > Memory > UI
-7. **Propón soluciones**: Cada problema debe tener código corregido
-8. **Evita falsos positivos**: No todo loop anidado es malo
-9. **Considera el contexto**: Un O(n²) con n=10 no es problema
-10. **Respeta estándares del proyecto**: Usa CLAUDE.md/AGENTS.md como referencia
-11. **Sugiere herramientas**: Para validar las mejoras
-12. **Reconoce lo bueno**: Menciona optimizaciones ya implementadas
+2. **Detecta el lenguaje**: Adapta patrones de análisis al lenguaje del proyecto
+3. **Interpreta inteligentemente**: Buscar archivos relacionados con lo que pida el usuario
+4. **Confirma si hay ambigüedad**: Si hay múltiples coincidencias, pregunta
+5. **Sé específico**: Indica archivos, líneas y código exacto
+6. **Cuantifica cuando sea posible**: "O(n²) en array de 10K items = ~100M operaciones"
+7. **Prioriza por impacto**: Bloqueos > Algoritmos > Memory > UI
+8. **Propón soluciones idiomáticas**: Cada problema debe tener código corregido
+9. **Evita falsos positivos**: No todo loop anidado es malo
+10. **Considera el contexto**: Un O(n²) con n=10 no es problema
+11. **Respeta estándares del proyecto**: Usa CLAUDE.md/AGENTS.md como referencia
+12. **Sugiere herramientas**: Para validar las mejoras
+13. **Reconoce lo bueno**: Menciona optimizaciones ya implementadas

@@ -1,13 +1,13 @@
 ---
 name: dinnovos-security-scan
-description: Escanea el código en busca de vulnerabilidades de seguridad - genera informe detallado sin modificar archivos. Solo lectura.
+description: Escanea el código en busca de vulnerabilidades de seguridad - genera informe detallado sin modificar archivos. Soporta múltiples lenguajes. Solo lectura.
 model: opus
 allowed-tools: ["Bash(read-only)", "Read", "Grep", "Glob"]
 ---
 
 # Escaneo de Seguridad
 
-Analiza el código en busca de vulnerabilidades de seguridad. **Solo lectura, no modifica nada.**
+Analiza el código en busca de vulnerabilidades de seguridad. **Solo lectura, no modifica nada. Soporta múltiples lenguajes.**
 
 ## Entrada del Usuario
 
@@ -16,6 +16,7 @@ El usuario puede especificar qué escanear de varias formas:
 **Ruta exacta:**
 - `/dinnovos-security-scan src/api/`
 - `/dinnovos-security-scan src/auth/authService.ts`
+- `/dinnovos-security-scan app/auth/`
 
 **Lenguaje natural (ejemplos ilustrativos):**
 - `/dinnovos-security-scan escanea el módulo de <área>`
@@ -39,42 +40,19 @@ Usar directamente.
 Buscar archivos que coincidan con la descripción:
 
 ```bash
-# Explorar estructura del proyecto
-find . -type f \( -name "*.ts" -o -name "*.tsx" -o -name "*.js" -o -name "*.jsx" -o -name "*.py" \) | grep -v node_modules | grep -v dist | grep -v .git
+# Explorar estructura del proyecto (incluye archivos de config)
+find . -type f \( -name "*.ts" -o -name "*.tsx" -o -name "*.js" -o -name "*.jsx" -o -name "*.py" -o -name "*.go" -o -name "*.rs" -o -name "*.php" -o -name "*.rb" -o -name "*.java" -o -name "*.env*" -o -name "*.yml" -o -name "*.yaml" -o -name "Dockerfile*" \) \
+  ! -path "*/node_modules/*" ! -path "*/vendor/*" ! -path "*/target/*" ! -path "*/.git/*" ! -path "*/dist/*"
 
-# Buscar por nombre relacionado (reemplaza <término> con lo que pidió el usuario)
+# Buscar por nombre relacionado
 find . -type f -iname "*<término>*" | grep -v node_modules
 find . -type d -iname "*<término>*" | grep -v node_modules
 
 # Buscar contenido relacionado
-grep -ril "<término>" --include="*.ts" --include="*.tsx" --include="*.js" | grep -v node_modules | head -30
+grep -ril "<término>" --include="*.ts" --include="*.tsx" --include="*.js" --include="*.py" --include="*.go" | grep -v node_modules | head -30
 ```
 
-**Confirma con el usuario** si encuentras múltiples coincidencias:
-```
-Encontré estos archivos/carpetas relacionados con "<término>":
-1. src/api/[Carpeta1]/
-2. src/services/[Archivo1].ts
-3. src/middleware/[Archivo2].ts
-
-¿Escaneo todos o alguno específico?
-```
-
-Si solo hay una coincidencia clara, procede directamente.
-
-### Si no se especificó nada:
-Escanear todo el proyecto (incluye archivos de configuración):
-
-```bash
-find . -type f \( -name "*.ts" -o -name "*.tsx" -o -name "*.js" -o -name "*.jsx" -o -name "*.py" -o -name "*.java" -o -name "*.go" -o -name "*.php" -o -name "*.rb" -o -name "*.cs" -o -name "*.vue" -o -name "*.svelte" -o -name "*.env*" -o -name "*.yml" -o -name "*.yaml" -o -name "*.json" -o -name "*.xml" -o -name "*.config" -o -name "Dockerfile*" \) \
-  ! -path "*/node_modules/*" \
-  ! -path "*/.git/*" \
-  ! -path "*/dist/*" \
-  ! -path "*/build/*" \
-  ! -path "*/__pycache__/*" \
-  ! -path "*/vendor/*" \
-  ! -path "*/.next/*"
-```
+**Confirma con el usuario** si encuentras múltiples coincidencias.
 
 **Límite:** Máximo 100 archivos. Si hay más, pide acotar o prioriza por riesgo (auth, api, config primero).
 
@@ -93,8 +71,9 @@ cat .cursor/rules.md 2>/dev/null
 # Configuración de seguridad
 cat .env.example 2>/dev/null
 cat .gitignore 2>/dev/null
-cat package.json 2>/dev/null
-cat requirements.txt 2>/dev/null
+
+# Detectar stack
+cat package.json pyproject.toml go.mod Cargo.toml composer.json 2>/dev/null
 cat docker-compose.yml 2>/dev/null
 ```
 
@@ -113,176 +92,204 @@ Lee cada archivo y realiza el análisis de seguridad completo.
 
 ---
 
-## Paso 4: Categorías de Análisis
+## Paso 4: Análisis OWASP Top 10
 
-### 🔐 1. OWASP Top 10
-
-#### A01: Broken Access Control
+### A01: Broken Access Control
 - Endpoints sin verificación de permisos
 - Acceso directo a objetos (IDOR)
 - Elevación de privilegios
 - Bypass de controles de acceso
 
-#### A02: Cryptographic Failures
+### A02: Cryptographic Failures
 - Datos sensibles sin encriptar
 - Algoritmos débiles (MD5, SHA1, DES)
 - Keys hardcodeadas
 - Certificados autofirmados en producción
 
-#### A03: Injection
-- SQL Injection (queries concatenadas)
-- NoSQL Injection
-- Command Injection (exec, system, eval)
-- LDAP Injection
-- XPath Injection
+### A03: Injection
 
-#### A04: Insecure Design
+#### SQL Injection por lenguaje:
+
+**JavaScript/TypeScript:**
+```javascript
+// ❌ Vulnerable
+`SELECT * FROM users WHERE id = ${id}`
+db.query(`SELECT * FROM users WHERE email = '${email}'`)
+// ✅ Seguro
+db.query('SELECT * FROM users WHERE id = ?', [id])
+```
+
+**Python:**
+```python
+# ❌ Vulnerable
+f"SELECT * FROM users WHERE id = {user_id}"
+cursor.execute(f"SELECT * FROM users WHERE email = '{email}'")
+# ✅ Seguro
+cursor.execute("SELECT * FROM users WHERE id = %s", (user_id,))
+```
+
+**Go:**
+```go
+// ❌ Vulnerable
+fmt.Sprintf("SELECT * FROM users WHERE id = %s", id)
+// ✅ Seguro
+db.Query("SELECT * FROM users WHERE id = $1", id)
+```
+
+**PHP:**
+```php
+// ❌ Vulnerable
+"SELECT * FROM users WHERE id = " . $id
+// ✅ Seguro
+$stmt = $pdo->prepare("SELECT * FROM users WHERE id = ?");
+```
+
+**Ruby:**
+```ruby
+# ❌ Vulnerable
+"SELECT * FROM users WHERE id = #{id}"
+# ✅ Seguro
+User.where(id: id)
+```
+
+#### Command Injection:
+
+| Lenguaje | ❌ Vulnerable | ✅ Seguro |
+|----------|--------------|----------|
+| JS | `exec(cmd)` | `execFile(cmd, args)` |
+| Python | `os.system(f"ping {h}")` | `subprocess.run(['ping', h])` |
+| Go | `exec.Command("sh", "-c", input)` | `exec.Command("ping", host)` |
+| PHP | `system($cmd)` | `escapeshellarg()` |
+| Ruby | `` `#{cmd}` `` | `system('cmd', arg)` |
+
+#### XSS:
+
+| Lenguaje | ❌ Vulnerable |
+|----------|--------------|
+| JS/React | `dangerouslySetInnerHTML`, `innerHTML` |
+| PHP | `echo $input` sin escape |
+| Ruby/Rails | `raw()`, `html_safe` mal usado |
+| Go/templ | `template.HTML()` con input |
+
+#### Code Injection:
+
+| Lenguaje | ❌ Evitar |
+|----------|----------|
+| JS | `eval()`, `Function()`, `setTimeout(string)` |
+| Python | `eval()`, `exec()`, `pickle.loads()` |
+| PHP | `eval()`, `create_function()`, `preg_replace /e` |
+| Ruby | `eval()`, `instance_eval` con input |
+
+### A04: Insecure Design
 - Falta de rate limiting
 - Sin validación de negocio
 - Flujos de autenticación débiles
 
-#### A05: Security Misconfiguration
+### A05: Security Misconfiguration
 - Debug habilitado en producción
 - Headers de seguridad faltantes
-- CORS demasiado permisivo
+- CORS demasiado permisivo: `Access-Control-Allow-Origin: *`
 - Permisos excesivos
 - Configuraciones por defecto
 
-#### A06: Vulnerable Components
+### A06: Vulnerable Components
 - Dependencias con CVEs conocidos
 - Paquetes desactualizados
 - Librerías abandonadas
 
-#### A07: Authentication Failures
+### A07: Authentication Failures
 - Contraseñas débiles permitidas
 - Sin protección contra brute force
 - Tokens predecibles
 - Sesiones que no expiran
+- JWT secrets débiles
 
-#### A08: Data Integrity Failures
+### A08: Data Integrity Failures
 - Deserialización insegura
 - Sin verificación de integridad
 - Updates automáticos sin firma
 
-#### A09: Logging Failures
+### A09: Logging Failures
 - Datos sensibles en logs
 - Sin logging de eventos críticos
 - Logs accesibles públicamente
 
-#### A10: SSRF
+### A10: SSRF
 - URLs controladas por usuario sin validar
 - Requests internos manipulables
 
 ---
 
-### 🔑 2. Credenciales y Secrets
+## Paso 5: Credenciales y Secrets
 
-Buscar en el código:
-- API keys
-- Passwords hardcodeados
-- Tokens de acceso
-- Connection strings con credenciales
-- Private keys
-- JWT secrets
-- OAuth secrets
-
-**Patrones a detectar:**
-```
+### Patrones a detectar:
+```regex
 password\s*=\s*["'][^"']+["']
 api[_-]?key\s*=\s*["'][^"']+["']
 secret\s*=\s*["'][^"']+["']
 token\s*=\s*["'][^"']+["']
 AWS_ACCESS_KEY
 PRIVATE[_-]?KEY
+-----BEGIN.*PRIVATE KEY-----
 ```
 
----
+### Ejemplos por lenguaje:
 
-### 💉 3. Inyecciones
-
-#### SQL Injection
+**JavaScript/TypeScript:**
 ```javascript
-// Vulnerable
-query = "SELECT * FROM users WHERE id = " + userId
-cursor.execute(f"SELECT * FROM users WHERE email = '{email}'")
+// ❌ Hardcoded
+const API_KEY = "sk-1234567890"
+const password = "admin123"
 ```
 
-#### Command Injection
-```javascript
-// Vulnerable
-os.system("ping " + userInput)
-exec(userCommand)
-eval(userInput)
-child_process.exec(cmd)
+**Python:**
+```python
+# ❌ Hardcoded
+API_KEY = "sk-1234567890"
+DB_PASSWORD = "secret"
 ```
 
-#### XSS (Cross-Site Scripting)
-```javascript
-// Vulnerable
-innerHTML = userInput
-document.write(data)
-dangerouslySetInnerHTML
-v-html con datos de usuario
+**Go:**
+```go
+// ❌ Hardcoded
+const apiKey = "sk-1234567890"
+var dbPassword = "secret"
 ```
 
 ---
 
-### 🛡️ 4. Headers de Seguridad
+## Paso 6: Archivos Sensibles
 
-Verificar que existan:
-- `Content-Security-Policy`
-- `X-Content-Type-Options: nosniff`
-- `X-Frame-Options: DENY`
-- `Strict-Transport-Security`
-- `X-XSS-Protection`
-- `Referrer-Policy`
+Verificar que `.gitignore` incluye:
+- `.env`, `.env.*`
+- `*.pem`, `*.key`
+- `*credentials*`
+- `*.log`
 
 ---
 
-### 🔒 5. Autenticación y Sesiones
-
-- Tokens JWT sin expiración
-- Secrets JWT débiles o hardcodeados
-- Sesiones sin invalidación en logout
-- Sin refresh token rotation
-- Cookies sin flags seguros (HttpOnly, Secure, SameSite)
-
----
-
-### 📁 6. Archivos Sensibles
-
-Verificar que NO estén expuestos:
-- `.env` (debe estar en .gitignore)
-- `.git/`
-- Backups (`.bak`, `.old`, `.sql`)
-- Logs con datos sensibles
-- Archivos de configuración con secrets
-
----
-
-### 🌐 7. CORS y CSRF
-
-- `Access-Control-Allow-Origin: *` (demasiado permisivo)
-- Sin protección CSRF en formularios
-- Tokens CSRF predecibles
-
----
-
-### 📦 8. Dependencias
+## Paso 7: Dependencias
 
 ```bash
-# Verificar archivos de dependencias
-cat package.json 2>/dev/null | grep -E "dependencies|devDependencies"
-cat requirements.txt 2>/dev/null
-cat Gemfile 2>/dev/null
-cat go.mod 2>/dev/null
+# JavaScript
+cat package.json | grep -A 100 '"dependencies"'
+# Python
+cat requirements.txt pyproject.toml
+# Go
+cat go.mod
+# Rust
+cat Cargo.toml
+# PHP
+cat composer.json
+# Ruby
+cat Gemfile
 ```
 
 Identificar dependencias potencialmente vulnerables o muy desactualizadas.
 
 ---
 
-## Paso 5: Generar Informe
+## Paso 8: Generar Informe
 
 **Responde directamente en el chat:**
 
@@ -291,6 +298,7 @@ Identificar dependencias potencialmente vulnerables o muy desactualizadas.
 
 **Fecha:** [fecha actual]
 **Alcance:** `[ruta, descripción o "proyecto completo"]`
+**Lenguaje(s):** [detectados]
 **Archivos analizados:** [número]
 **Vulnerabilidades encontradas:** [número]
 
@@ -441,13 +449,15 @@ Identificar dependencias potencialmente vulnerables o muy desactualizadas.
 
 1. **Solo lectura**: No modificar ningún archivo, solo analizar y reportar
 2. **No ejecutes exploits**: Solo identifica vulnerabilidades, no las explotes
-3. **Interpreta inteligentemente**: Buscar archivos relacionados con lo que pida el usuario
-4. **Confirma si hay ambigüedad**: Si hay múltiples coincidencias, pregunta
-5. **Sé exhaustivo**: Revisa todos los archivos del alcance
-6. **Prioriza correctamente**: Críticas primero, siempre
-7. **Incluye remediación**: Cada vulnerabilidad debe tener su solución
-8. **Sé específico**: Archivos, líneas y código exacto
-9. **Evita falsos positivos**: No alarmes innecesariamente
-10. **Considera el contexto**: Código de desarrollo vs producción
-11. **Respeta estándares del proyecto**: Usa CLAUDE.md/AGENTS.md como referencia
-12. **Reconoce lo bueno**: Menciona prácticas de seguridad bien implementadas
+3. **Detecta el lenguaje**: Adapta patrones de vulnerabilidad al lenguaje del proyecto
+4. **Interpreta inteligentemente**: Buscar archivos relacionados con lo que pida el usuario
+5. **Confirma si hay ambigüedad**: Si hay múltiples coincidencias, pregunta
+6. **Sé exhaustivo**: Revisa todos los archivos del alcance
+7. **Prioriza correctamente**: Críticas primero, siempre
+8. **Incluye remediación**: Cada vulnerabilidad debe tener su solución con código corregido
+9. **Sé específico**: Archivos, líneas y código exacto
+10. **Evita falsos positivos**: No alarmes innecesariamente
+11. **Considera el contexto**: Código de desarrollo vs producción
+12. **Respeta estándares del proyecto**: Usa CLAUDE.md/AGENTS.md como referencia
+13. **Reconoce lo bueno**: Menciona prácticas de seguridad bien implementadas
+14. **Referencias**: Incluye OWASP, CWE cuando aplique

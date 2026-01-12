@@ -1,13 +1,13 @@
 ---
 name: dinnovos-codebase-explain
-description: Explica la arquitectura, estructura y flujos de un proyecto o módulo. Ideal para onboarding o entender código nuevo. Solo lectura.
+description: Explica la arquitectura, estructura y flujos de un proyecto o módulo. Ideal para onboarding o entender código nuevo. Soporta múltiples lenguajes. Solo lectura.
 model: opus
 allowed-tools: ["Bash(read-only)", "Read", "Grep", "Glob"]
 ---
 
 # Explicación de Codebase
 
-Analiza y explica la arquitectura, estructura y flujos de un proyecto o módulo. **Solo lectura, no modifica nada.**
+Analiza y explica la arquitectura, estructura y flujos de un proyecto o módulo. **Solo lectura, no modifica nada. Soporta múltiples lenguajes.**
 
 ## Entrada del Usuario
 
@@ -16,6 +16,7 @@ El usuario puede especificar qué explicar de varias formas:
 **Ruta exacta:**
 - `/dinnovos-codebase-explain src/`
 - `/dinnovos-codebase-explain src/modules/payments/`
+- `/dinnovos-codebase-explain app/`
 
 **Lenguaje natural (ejemplos ilustrativos):**
 - `/dinnovos-codebase-explain explica el proyecto`
@@ -31,170 +32,205 @@ El usuario puede especificar qué explicar de varias formas:
 
 ---
 
-## Paso 1: Interpretar la Solicitud
-
-### Si es ruta exacta:
-Usar directamente.
-
-### Si es lenguaje natural:
-Buscar archivos que coincidan con la descripción:
+## Paso 1: Detectar Lenguaje y Stack
 
 ```bash
-# Explorar estructura del proyecto
-find . -type f \( -name "*.ts" -o -name "*.tsx" -o -name "*.js" -o -name "*.jsx" -o -name "*.py" \) | grep -v node_modules | grep -v dist | grep -v .git
+# Estructura general
+find . -type d -maxdepth 3 | grep -v node_modules | grep -v vendor | grep -v target | grep -v __pycache__ | sort
 
-# Buscar por nombre relacionado
-find . -type f -iname "*<término>*" | grep -v node_modules
-find . -type d -iname "*<término>*" | grep -v node_modules
-
-# Buscar contenido relacionado
-grep -ril "<término>" --include="*.ts" --include="*.tsx" --include="*.js" | grep -v node_modules | head -30
+# Detectar stack
+ls -la
 ```
 
-**Confirma con el usuario** si hay ambigüedad sobre qué explicar.
+### Detección por archivos:
 
-### Si no se especificó nada:
-Explorar todo el proyecto.
+| Archivo | Stack |
+|---------|-------|
+| `package.json` | Node.js / JavaScript / TypeScript |
+| `tsconfig.json` | TypeScript |
+| `pyproject.toml` / `requirements.txt` | Python |
+| `go.mod` | Go |
+| `Cargo.toml` | Rust |
+| `composer.json` | PHP |
+| `Gemfile` | Ruby |
+| `pom.xml` / `build.gradle` | Java |
+| `*.csproj` | C# / .NET |
+
+### Frameworks comunes:
+
+| Lenguaje | Archivos indicadores | Framework |
+|----------|---------------------|-----------|
+| JS/TS | `next.config.js` | Next.js |
+| JS/TS | `vite.config.ts` | Vite |
+| JS/TS | `angular.json` | Angular |
+| Python | `manage.py` | Django |
+| Python | `app.py` + Flask imports | Flask |
+| Python | `main.py` + FastAPI imports | FastAPI |
+| Go | `go.mod` + chi/gin/echo | Chi/Gin/Echo |
+| Rust | `Cargo.toml` + actix/axum | Actix/Axum |
+| PHP | `artisan` | Laravel |
+| Ruby | `config.ru` + Rails | Rails |
 
 ---
 
-## Paso 2: Exploración Inicial
+## Paso 2: Leer Documentación
 
 ```bash
-# Estructura de carpetas (2 niveles)
-find . -type d -maxdepth 3 | grep -v node_modules | grep -v .git | grep -v dist | sort
-
-# Archivos principales
-ls -la
 cat README.md 2>/dev/null
-cat package.json 2>/dev/null
-cat tsconfig.json 2>/dev/null
-
-# Estándares del proyecto
 cat CLAUDE.md 2>/dev/null
 cat AGENTS.md 2>/dev/null
-cat .cursor/rules.md 2>/dev/null
 cat ARCHITECTURE.md 2>/dev/null
-cat CONTRIBUTING.md 2>/dev/null
+cat docs/*.md 2>/dev/null
 ```
 
 ---
 
-## Paso 3: Análisis Profundo
+## Paso 3: Identificar Entry Points
 
-### 3.1 Puntos de Entrada
-```bash
-# Identificar entry points
-cat src/index.ts 2>/dev/null
-cat src/main.ts 2>/dev/null
-cat src/app.ts 2>/dev/null
-cat src/App.tsx 2>/dev/null
-cat main.py 2>/dev/null
-cat cmd/main.go 2>/dev/null
-```
+### Por lenguaje/framework:
 
-### 3.2 Rutas y Endpoints (si aplica)
-```bash
-# APIs y rutas
-find . -type f -name "*route*" | grep -v node_modules
-find . -type f -name "*controller*" | grep -v node_modules
-find . -type f -name "*endpoint*" | grep -v node_modules
-grep -ril "app.get\|app.post\|router\." --include="*.ts" --include="*.js" | grep -v node_modules
-```
+| Stack | Entry Points |
+|-------|--------------|
+| **Node.js** | `src/index.ts`, `src/main.ts`, `src/app.ts` |
+| **React** | `src/App.tsx`, `src/main.tsx`, `pages/_app.tsx` |
+| **Next.js** | `pages/`, `app/`, `next.config.js` |
+| **Python** | `main.py`, `app.py`, `__main__.py` |
+| **Django** | `manage.py`, `urls.py`, `settings.py` |
+| **FastAPI** | `main.py`, `app/main.py` |
+| **Go** | `main.go`, `cmd/*/main.go` |
+| **Rust** | `src/main.rs`, `src/lib.rs` |
+| **PHP/Laravel** | `public/index.php`, `routes/web.php` |
+| **Ruby/Rails** | `config.ru`, `config/routes.rb` |
+| **Java/Spring** | `*Application.java`, `pom.xml` |
+| **C#/.NET** | `Program.cs`, `Startup.cs` |
 
-### 3.3 Modelos y Esquemas
 ```bash
-# Modelos de datos
-find . -type f -name "*model*" | grep -v node_modules
-find . -type f -name "*schema*" | grep -v node_modules
-find . -type f -name "*entity*" | grep -v node_modules
-find . -type d -name "models" -o -name "entities" -o -name "schemas" | grep -v node_modules
-```
-
-### 3.4 Servicios y Lógica de Negocio
-```bash
-# Servicios
-find . -type f -name "*service*" | grep -v node_modules
-find . -type f -name "*usecase*" | grep -v node_modules
-find . -type d -name "services" -o -name "usecases" | grep -v node_modules
-```
-
-### 3.5 Componentes UI (si aplica)
-```bash
-# Componentes React/Vue/etc
-find . -type f \( -name "*.tsx" -o -name "*.vue" -o -name "*.svelte" \) | grep -v node_modules | head -30
-find . -type d -name "components" -o -name "pages" -o -name "views" | grep -v node_modules
-```
-
-### 3.6 Configuración
-```bash
-# Archivos de configuración
-find . -type f -name "*.config.*" | grep -v node_modules
-find . -type f -name ".env*" | grep -v node_modules
-cat .env.example 2>/dev/null
-```
-
-### 3.7 Dependencias Clave
-```bash
-# Dependencias principales
-cat package.json 2>/dev/null | grep -A 50 '"dependencies"'
-cat requirements.txt 2>/dev/null
-cat go.mod 2>/dev/null
+# Buscar entry points
+cat src/index.ts src/main.ts src/app.ts 2>/dev/null          # Node
+cat src/App.tsx pages/_app.tsx app/layout.tsx 2>/dev/null    # React/Next
+cat main.py app.py manage.py 2>/dev/null                      # Python
+cat cmd/*/main.go main.go 2>/dev/null                         # Go
+cat src/main.rs src/lib.rs 2>/dev/null                        # Rust
 ```
 
 ---
 
-## Paso 4: Categorías de Análisis
+## Paso 4: Mapear Estructura
 
-### 🏗️ 1. Arquitectura General
-- Patrón arquitectónico (MVC, Clean Architecture, Hexagonal, etc.)
-- Estructura de carpetas y su propósito
-- Separación de responsabilidades
-- Capas identificadas
+### Patrones comunes por stack:
 
-### 🚪 2. Puntos de Entrada
-- Entry points de la aplicación
-- Cómo se inicializa
-- Configuración de bootstrap
+#### JavaScript/TypeScript (Node/React):
+```
+src/
+├── components/     # UI components
+├── pages/          # Routes/Pages
+├── hooks/          # Custom hooks
+├── services/       # API/Business logic
+├── utils/          # Helpers
+├── types/          # TypeScript types
+└── lib/            # Shared libraries
+```
 
-### 🔀 3. Flujos Principales
-- Flujos de datos más importantes
-- Request/Response lifecycle
-- Flujos de autenticación (si existe)
-- Flujos de negocio críticos
+#### Python (Django/FastAPI):
+```
+app/
+├── api/            # Endpoints
+├── models/         # Database models
+├── schemas/        # Pydantic schemas
+├── services/       # Business logic
+├── repositories/   # Data access
+└── utils/          # Helpers
 
-### 📦 4. Módulos y Dependencias
-- Módulos principales y su responsabilidad
-- Cómo se relacionan entre sí
-- Dependencias externas clave
-- Dependencias internas (imports entre módulos)
+# Django específico
+project/
+├── apps/
+│   └── myapp/
+│       ├── models.py
+│       ├── views.py
+│       ├── urls.py
+│       └── serializers.py
+└── settings.py
+```
 
-### 💾 5. Capa de Datos
-- Cómo se manejan los datos
-- Base de datos utilizada
-- ORMs o query builders
-- Migraciones
+#### Go:
+```
+cmd/
+├── api/            # Entry points
+└── worker/
+internal/
+├── handlers/       # HTTP handlers
+├── services/       # Business logic
+├── repositories/   # Data access
+├── models/         # Domain models
+└── pkg/            # Shared packages
+pkg/                # Public packages
+```
 
-### 🎨 6. Capa de Presentación (si aplica)
-- Framework de UI
-- Estructura de componentes
-- Manejo de estado
-- Routing
+#### Rust:
+```
+src/
+├── main.rs         # Entry point
+├── lib.rs          # Library root
+├── handlers/       # Request handlers
+├── services/       # Business logic
+├── models/         # Domain types
+└── db/             # Database layer
+```
 
-### 🔌 7. Integraciones Externas
-- APIs externas consumidas
-- Servicios de terceros
-- Webhooks
-- Colas de mensajes
+#### PHP (Laravel):
+```
+app/
+├── Http/
+│   ├── Controllers/
+│   └── Middleware/
+├── Models/
+├── Services/
+└── Repositories/
+routes/
+├── web.php
+└── api.php
+```
 
-### ⚙️ 8. Configuración y Entorno
-- Variables de entorno
-- Archivos de configuración
-- Diferentes entornos (dev, staging, prod)
+#### Ruby (Rails):
+```
+app/
+├── controllers/
+├── models/
+├── views/
+├── services/
+└── jobs/
+config/
+└── routes.rb
+```
 
 ---
 
-## Paso 5: Generar Informe
+## Paso 5: Identificar Patrones Arquitectónicos
+
+| Patrón | Indicadores |
+|--------|-------------|
+| **MVC** | controllers/, models/, views/ |
+| **Clean Architecture** | domain/, usecases/, infrastructure/ |
+| **Hexagonal** | ports/, adapters/, core/ |
+| **DDD** | domain/, application/, infrastructure/ |
+| **Microservices** | services/, múltiples go.mod/package.json |
+| **Monorepo** | packages/, apps/, libs/ |
+
+---
+
+## Paso 6: Mapear Flujos de Datos
+
+### Identificar:
+- Routes/Endpoints
+- Controllers/Handlers
+- Services/Use Cases
+- Repositories/DAOs
+- Models/Entities
+- External APIs
+
+---
+
+## Paso 7: Generar Informe
 
 **Responde directamente en el chat:**
 
@@ -211,7 +247,7 @@ cat go.mod 2>/dev/null
 ## 📋 Resumen Ejecutivo
 
 **Tipo de proyecto:** [Web App | API | CLI | Library | Monorepo | etc.]
-**Stack tecnológico:** [TypeScript + React + Node | Python + FastAPI | etc.]
+**Stack tecnológico:** [TypeScript + React + Node | Python + FastAPI | Go + Chi | etc.]
 **Patrón arquitectónico:** [MVC | Clean Architecture | Hexagonal | etc.]
 **Estado general:** [Bien estructurado | Necesita refactor | Legacy | etc.]
 
@@ -245,7 +281,7 @@ proyecto/
 
 ---
 
-## 🚪 Puntos de Entrada
+## 🚪 Entry Points
 
 ### Entry Point Principal
 - **Archivo:** `[ruta]`
@@ -264,9 +300,9 @@ proyecto/
 ### Flujo 1: [Nombre del flujo - ej: Autenticación de Usuario]
 
 ```
-[Componente A] → [Componente B] → [Componente C]
-     ↓                 ↓                ↓
-[Acción]         [Acción]         [Acción]
+[Request] → [Handler] → [Service] → [Repository] → [DB]
+                ↓
+           [Response]
 ```
 
 **Archivos involucrados:**
@@ -308,7 +344,7 @@ proyecto/
 ## 💾 Capa de Datos
 
 **Base de datos:** [PostgreSQL | MongoDB | etc.]
-**ORM/Query Builder:** [Prisma | TypeORM | Mongoose | etc.]
+**ORM/Query Builder:** [Prisma | TypeORM | Mongoose | GORM | SQLAlchemy | etc.]
 
 ### Modelos Principales
 | Modelo | Archivo | Campos Clave |
@@ -324,7 +360,7 @@ Order (1) ←──────→ (N) OrderItem
 
 ---
 
-## 🎨 Capa de Presentación
+## 🎨 Capa de Presentación (si aplica)
 
 **Framework:** [React | Vue | Angular | etc.]
 **Manejo de estado:** [Redux | Zustand | Context | etc.]
@@ -410,14 +446,15 @@ Order (1) ←──────→ (N) OrderItem
 ## Reglas de Operación
 
 1. **Solo lectura**: No modificar ningún archivo, solo analizar y explicar
-2. **Interpreta inteligentemente**: Buscar archivos relacionados con lo que pida el usuario
-3. **Confirma si hay ambigüedad**: Si no está claro qué explicar, pregunta
-4. **Sé didáctico**: Explica para alguien que no conoce el proyecto
-5. **Usa diagramas**: ASCII art para flujos y relaciones cuando ayude
-6. **Prioriza lo importante**: Flujos críticos primero, detalles después
-7. **Sé específico**: Menciona archivos y líneas concretas
-8. **Respeta estándares del proyecto**: Usa CLAUDE.md/AGENTS.md como referencia
-9. **Identifica patrones**: Nombra el patrón arquitectónico si lo reconoces
-10. **Señala complejidad**: Indica áreas difíciles de entender
-11. **Sugiere navegación**: Guía sobre por dónde empezar a leer
-12. **Reconoce lo bueno**: Menciona prácticas positivas encontradas
+2. **Detecta el stack**: Adapta explicación al lenguaje/framework del proyecto
+3. **Interpreta inteligentemente**: Buscar archivos relacionados con lo que pida el usuario
+4. **Confirma si hay ambigüedad**: Si no está claro qué explicar, pregunta
+5. **Sé didáctico**: Explica para alguien que no conoce el proyecto
+6. **Usa diagramas**: ASCII art para flujos y relaciones cuando ayude
+7. **Prioriza lo importante**: Flujos críticos primero, detalles después
+8. **Sé específico**: Menciona archivos y líneas concretas
+9. **Respeta estándares del proyecto**: Usa CLAUDE.md/AGENTS.md como referencia
+10. **Identifica patrones**: Nombra el patrón arquitectónico si lo reconoces
+11. **Señala complejidad**: Indica áreas difíciles de entender
+12. **Sugiere navegación**: Guía sobre por dónde empezar a leer
+13. **Reconoce lo bueno**: Menciona prácticas positivas encontradas

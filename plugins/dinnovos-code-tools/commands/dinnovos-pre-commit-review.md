@@ -1,13 +1,13 @@
 ---
 name: dinnovos-pre-commit-review
-description: Auditoría completa de cambios pendientes antes del commit - detecta bugs, problemas de calidad, seguridad y oportunidades de mejora
+description: Auditoría completa de cambios pendientes antes del commit - detecta bugs, problemas de calidad, seguridad y oportunidades de mejora. Soporta múltiples lenguajes.
 model: opus
 allowed-tools: ["Bash", "Read", "Grep"]
 ---
 
 # Revisión Pre-Commit Completa
 
-Analiza exhaustivamente todos los cambios pendientes antes de hacer commit. Detecta problemas críticos, evalúa calidad del código y sugiere mejoras concretas.
+Analiza exhaustivamente todos los cambios pendientes antes de hacer commit. Detecta problemas críticos, evalúa calidad del código y sugiere mejoras concretas. **Soporta múltiples lenguajes.**
 
 ## Paso 1: Identificar Cambios Pendientes
 
@@ -47,6 +47,12 @@ git diff --cached
 
 # Ver estructura del proyecto para contexto
 ls -la
+
+# Detectar stack
+cat package.json pyproject.toml go.mod Cargo.toml composer.json Gemfile 2>/dev/null
+
+# Estándares del proyecto
+cat CLAUDE.md AGENTS.md 2>/dev/null
 ```
 
 Si existe `CLAUDE.md`, `AGENTS.md`, `README.md` o archivos de configuración del proyecto (`.eslintrc`, `tsconfig.json`, etc.), léelos para entender los estándares del proyecto.
@@ -70,6 +76,16 @@ Problemas que causarán fallos en producción:
 - **Tipos incorrectos** que pasarán en runtime pero fallarán
 - **Estados inconsistentes** que corrompen datos
 
+#### Ejemplos por lenguaje:
+
+| Lenguaje | Problema | Ejemplo |
+|----------|----------|---------|
+| JS/TS | null/undefined sin verificar | `user.profile.name` sin optional chaining |
+| Python | Mutable default args | `def f(lst=[])` |
+| Go | Error ignorado | `result, _ := fn()` |
+| Rust | unwrap() en producción | `value.unwrap()` |
+| PHP | Comparación débil | `$a == "0"` vs `$a === "0"` |
+
 ---
 
 ### 🔴 P0 - CRÍTICO: Seguridad
@@ -82,6 +98,16 @@ Vulnerabilidades que exponen el sistema:
 - **Exposición de datos sensibles**: logs con información privada
 - **Configuraciones inseguras**: CORS permisivo, HTTPS deshabilitado
 - **Dependencias vulnerables**: si se modificó package.json/requirements.txt
+
+#### Inyecciones por lenguaje:
+
+| Lenguaje | SQL Injection | Command Injection | XSS |
+|----------|--------------|-------------------|-----|
+| JS/TS | Template strings en queries | `exec(cmd + input)` | `innerHTML = input` |
+| Python | f-strings en queries | `os.system(f"cmd {input}")` | N/A |
+| Go | Concatenación en queries | `exec.Command("sh", "-c", input)` | `template.HTML()` |
+| Rust | format! en queries | N/A | N/A |
+| PHP | Concatenación en queries | `system($input)` | `echo $_GET['x']` |
 
 ---
 
@@ -97,11 +123,28 @@ Código que degradará la experiencia del usuario:
 - **Bundles inflados**: imports que traen librerías completas
 - **Falta de paginación** en listas potencialmente grandes
 
+#### Problemas comunes por lenguaje:
+
+| Lenguaje | Problema común | Solución |
+|----------|----------------|----------|
+| JS/TS | await en loop | Promise.all |
+| Python | list concat en loop | ''.join() |
+| Go | append sin pre-allocate | make([]T, 0, cap) |
+| Rust | .clone() innecesario | usar referencias |
+| PHP | query en loop | whereIn() |
+
 ---
 
 ### 🟠 P1 - ALTO: Errores de Tipado y Contratos
 
 Problemas que causarán bugs sutiles:
+
+| Lenguaje | Problema | Solución |
+|----------|----------|----------|
+| TypeScript | any implícito | tipos explícitos |
+| Python | sin type hints | agregar hints |
+| Go | interface{} sin check | type assertion con ok |
+| PHP | sin type declarations | PHP 7+ types |
 
 - **Any implícitos** o casteos forzados sin validación
 - **Tipos opcionales** usados sin verificar existencia
@@ -115,7 +158,7 @@ Problemas que causarán bugs sutiles:
 
 Código que dificultará el trabajo futuro:
 
-- **Código duplicado**: bloques repetidos que deberían extraerse
+- **Código duplicado**: bloques repetidos que deberían extraerse (>5 líneas)
 - **Funciones demasiado largas** (>50 líneas): difíciles de entender y testear
 - **Anidamiento excesivo** (>3 niveles): complejidad cognitiva alta
 - **Ternarios anidados**: preferir switch/if-else para claridad
@@ -143,7 +186,15 @@ Si existe CLAUDE.md, AGENTS.md o configuración de linting, verifica:
 
 Ruido que debería eliminarse antes del commit:
 
-- **Console.log/print/debugger**: código de debugging olvidado
+| Lenguaje | Debugging a remover |
+|----------|---------------------|
+| JS/TS | `console.log`, `debugger` |
+| Python | `print()`, `breakpoint()` |
+| Go | `fmt.Println` debug |
+| Rust | `println!`, `dbg!` |
+| PHP | `var_dump()`, `dd()` |
+| Ruby | `puts`, `binding.pry` |
+
 - **Código comentado**: si no sirve, se borra; Git guarda el historial
 - **Variables declaradas sin usar**: dead code
 - **Imports no utilizados**: inflan el bundle innecesariamente
@@ -173,6 +224,7 @@ Usa este formato exacto:
 
 **Fecha:** [fecha actual]
 **Branch:** [nombre del branch]
+**Lenguaje(s):** [detectados]
 **Archivos analizados:** [número]
 **Líneas modificadas:** ~[número aproximado]
 
@@ -243,12 +295,13 @@ Usa este formato exacto:
 ## Reglas de Operación
 
 1. **Sé específico**: Indica líneas exactas, muestra código concreto, no generalices
-2. **Prioriza correctamente**: Un bug crítico importa más que 10 mejoras de estilo
-3. **Explica el impacto real**: No digas "puede causar problemas", describe el escenario exacto
-4. **Propón soluciones**: Cada problema debe tener una corrección sugerida
-5. **Evita falsos positivos**: Si no estás seguro, márcalo como "posible problema a verificar"
-6. **Contexto importa**: Código de tests tiene reglas diferentes a producción
-7. **Preserva funcionalidad**: Las sugerencias de mejora nunca deben cambiar el comportamiento
-8. **Claridad sobre brevedad**: Código explícito es mejor que one-liners crípticos
-9. **Respeta los estándares del proyecto**: Si existe CLAUDE.md, AGENTS.md o linting config, síguelo
-10. **Sé pragmático**: No todo necesita ser perfecto, enfócate en lo que realmente importa
+2. **Detecta el lenguaje**: Adapta análisis y ejemplos al lenguaje del proyecto
+3. **Prioriza correctamente**: Un bug crítico importa más que 10 mejoras de estilo
+4. **Explica el impacto real**: No digas "puede causar problemas", describe el escenario exacto
+5. **Propón soluciones idiomáticas**: Patrones del lenguaje detectado
+6. **Evita falsos positivos**: Si no estás seguro, márcalo como "posible problema a verificar"
+7. **Contexto importa**: Código de tests tiene reglas diferentes a producción
+8. **Preserva funcionalidad**: Las sugerencias de mejora nunca deben cambiar el comportamiento
+9. **Claridad sobre brevedad**: Código explícito es mejor que one-liners crípticos
+10. **Respeta los estándares del proyecto**: Si existe CLAUDE.md, AGENTS.md o linting config, síguelo
+11. **Sé pragmático**: No todo necesita ser perfecto, enfócate en lo que realmente importa

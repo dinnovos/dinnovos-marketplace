@@ -1,13 +1,13 @@
 ---
 name: dinnovos-refactor-analysis
-description: Analiza código en busca de duplicaciones, lógica similar y oportunidades de refactorización. Solo lectura.
+description: Analiza código en busca de duplicaciones, lógica similar y oportunidades de refactorización. Soporta múltiples lenguajes. Solo lectura.
 model: opus
 allowed-tools: ["Bash(read-only)", "Read", "Grep", "Glob"]
 ---
 
 # Análisis de Refactorización
 
-Analiza el código en busca de duplicaciones y oportunidades de refactorización. **Solo lectura, no modifica nada.**
+Analiza el código en busca de duplicaciones y oportunidades de refactorización. **Solo lectura, no modifica nada. Soporta múltiples lenguajes.**
 
 ## Entrada del Usuario
 
@@ -16,6 +16,7 @@ El usuario puede especificar qué analizar de varias formas:
 **Ruta exacta:**
 - `/dinnovos-refactor-analysis src/components/`
 - `/dinnovos-refactor-analysis src/services/userService.ts`
+- `/dinnovos-refactor-analysis app/services/`
 
 **Lenguaje natural (ejemplos ilustrativos):**
 - `/dinnovos-refactor-analysis analiza los componentes de <área>`
@@ -40,14 +41,15 @@ Buscar archivos que coincidan con la descripción:
 
 ```bash
 # Explorar estructura del proyecto
-find . -type f \( -name "*.ts" -o -name "*.tsx" -o -name "*.js" -o -name "*.jsx" -o -name "*.py" \) | grep -v node_modules | grep -v dist | grep -v .git
+find . -type f \( -name "*.ts" -o -name "*.tsx" -o -name "*.js" -o -name "*.jsx" -o -name "*.py" -o -name "*.go" -o -name "*.rs" -o -name "*.php" -o -name "*.rb" -o -name "*.java" -o -name "*.cs" \) \
+  ! -path "*/node_modules/*" ! -path "*/vendor/*" ! -path "*/target/*" ! -path "*/__pycache__/*" ! -path "*/dist/*" ! -path "*/.git/*"
 
 # Buscar por nombre relacionado (reemplaza <término> con lo que pidió el usuario)
 find . -type f -iname "*<término>*" | grep -v node_modules
 find . -type d -iname "*<término>*" | grep -v node_modules
 
 # Buscar contenido relacionado
-grep -ril "<término>" --include="*.ts" --include="*.tsx" --include="*.js" | grep -v node_modules | head -30
+grep -ril "<término>" --include="*.ts" --include="*.tsx" --include="*.js" --include="*.py" --include="*.go" | grep -v node_modules | head -30
 ```
 
 **Confirma con el usuario** si encuentras múltiples coincidencias:
@@ -62,20 +64,6 @@ Encontré estos archivos/carpetas relacionados con "<término>":
 
 Si solo hay una coincidencia clara, procede directamente.
 
-### Si no se especificó nada:
-Analizar todo el proyecto:
-
-```bash
-find . -type f \( -name "*.ts" -o -name "*.tsx" -o -name "*.js" -o -name "*.jsx" -o -name "*.py" -o -name "*.java" -o -name "*.go" -o -name "*.php" -o -name "*.rb" -o -name "*.cs" -o -name "*.vue" -o -name "*.svelte" \) \
-  ! -path "*/node_modules/*" \
-  ! -path "*/.git/*" \
-  ! -path "*/dist/*" \
-  ! -path "*/build/*" \
-  ! -path "*/__pycache__/*" \
-  ! -path "*/vendor/*" \
-  ! -path "*/.next/*"
-```
-
 **Límite:** Máximo 100 archivos. Si hay más, pide acotar o prioriza por tamaño.
 
 ---
@@ -89,6 +77,9 @@ Busca y lee archivos de configuración y estándares:
 cat CLAUDE.md 2>/dev/null
 cat AGENTS.md 2>/dev/null
 cat .cursor/rules.md 2>/dev/null
+
+# Detectar stack
+cat package.json pyproject.toml go.mod Cargo.toml composer.json Gemfile 2>/dev/null
 
 # Configuración de linting y tipos
 cat .eslintrc* 2>/dev/null
@@ -122,10 +113,32 @@ Bloques de código idénticos o casi idénticos (>5 líneas) en múltiples lugar
 - Bloques copy-paste
 - Lógica repetida con diferentes nombres
 
-**Reportar:**
-- Archivos y líneas exactas
-- Porcentaje de similitud
-- Nombre sugerido para extracción
+#### Ejemplos por lenguaje:
+
+**JavaScript/TypeScript:**
+```typescript
+// ❌ Duplicado en UserCard.tsx y AdminCard.tsx
+const formatName = (user) => `${user.first} ${user.last}`
+// ✅ Extraer a utils/formatters.ts
+export const formatName = (user: User) => `${user.first} ${user.last}`
+```
+
+**Python:**
+```python
+# ❌ Duplicado en user_service.py y admin_service.py
+def format_name(user):
+    return f"{user.first} {user.last}"
+# ✅ Extraer a utils/formatters.py
+```
+
+**Go:**
+```go
+// ❌ Duplicado en handlers/
+func formatName(u User) string {
+    return u.First + " " + u.Last
+}
+// ✅ Extraer a pkg/formatters/
+```
 
 ---
 
@@ -139,10 +152,45 @@ Funciones o bloques que hacen cosas parecidas con pequeñas variaciones.
 - Transformaciones de datos análogas
 - Handlers con estructura repetida
 
-**Reportar:**
-- Qué hace cada uno
-- En qué se diferencian
-- Cómo unificarlos (parámetros, generics, etc.)
+#### Ejemplos por lenguaje:
+
+**JavaScript/TypeScript:**
+```typescript
+// ❌ Similar
+function validateUser(d) {
+  if (!d.email) return {error: 'Email required'}
+  if (!d.pass) return {error: 'Pass required'}
+}
+function validateAdmin(d) {
+  if (!d.email) return {error: 'Email required'}
+  if (!d.pass) return {error: 'Pass required'}
+  if (!d.role) return {error: 'Role required'}
+}
+// ✅ Unificado
+function validate(data, fields) {
+  for (const f of fields) {
+    if (!data[f]) return {error: `${f} required`}
+  }
+}
+```
+
+**Python:**
+```python
+# ❌ Similar
+def get_user_by_email(email): return db.query(User).filter_by(email=email).first()
+def get_user_by_id(id): return db.query(User).filter_by(id=id).first()
+# ✅ Unificado
+def get_user_by(**kwargs): return db.query(User).filter_by(**kwargs).first()
+```
+
+**Go:**
+```go
+// ❌ Similar handlers
+func GetUserHandler(w http.ResponseWriter, r *http.Request) { /*...*/ }
+func GetProductHandler(w http.ResponseWriter, r *http.Request) { /*...*/ }
+// ✅ Generic handler (Go 1.18+)
+func MakeGetHandler[T any](svc Service[T]) http.HandlerFunc { /*...*/ }
+```
 
 ---
 
@@ -155,10 +203,12 @@ Funciones con el mismo propósito en diferentes archivos.
 - Helpers repetidos
 - Funciones de validación similares
 
-**Reportar:**
-- Nombre y ubicación de cada una
-- Diferencias entre implementaciones
-- Cuál es la mejor implementación
+| Utilidad | Buscar en |
+|----------|-----------|
+| formatDate | Múltiples archivos |
+| capitalize | utils/, helpers/ |
+| slugify | varios servicios |
+| validateEmail | formularios |
 
 ---
 
@@ -166,15 +216,41 @@ Funciones con el mismo propósito en diferentes archivos.
 
 Clases o componentes con estructura o comportamiento parecido.
 
-**Buscar:**
-- Componentes UI con variaciones menores
-- Clases con métodos casi idénticos
-- Services/Controllers con lógica repetida
+#### Ejemplos por lenguaje:
 
-**Reportar:**
-- Qué tienen en común
-- Qué los diferencia
-- Patrón de abstracción sugerido (herencia, composición, HOC, etc.)
+**React:**
+```tsx
+// ❌ Componentes similares
+const UserCard = ({user}) => <Card><Avatar/><Name/></Card>
+const AdminCard = ({admin}) => <Card><Avatar/><Name/><Badge/></Card>
+// ✅ Componente base
+const PersonCard = ({person, badge}) => <Card><Avatar/><Name/>{badge}</Card>
+```
+
+**Python:**
+```python
+# ❌ Repositorios duplicados
+class UserRepo:
+    def find_all(self): return db.query(User).all()
+class ProductRepo:
+    def find_all(self): return db.query(Product).all()
+# ✅ Base genérica
+class BaseRepo(Generic[T]):
+    def find_all(self) -> List[T]: return db.query(self.model).all()
+```
+
+**Go:**
+```go
+// ❌ Services similares
+type UserService struct { db *DB }
+func (s *UserService) GetAll() []User { /*...*/ }
+type ProductService struct { db *DB }
+func (s *ProductService) GetAll() []Product { /*...*/ }
+// ✅ Interface común
+type Repository[T any] interface {
+    GetAll() []T
+}
+```
 
 ---
 
@@ -187,10 +263,10 @@ Valores hardcodeados repetidos.
 - Strings duplicados (URLs, mensajes, keys)
 - Configuraciones dispersas
 
-**Reportar:**
-- Valor repetido
-- Archivos y líneas donde aparece
-- Nombre sugerido para la constante
+| Tipo | JS/TS | Python | Go | Rust |
+|------|-------|--------|-----|------|
+| URL | `const API = ''` | `API = ''` | `const API = ""` | `const API: &str` |
+| Timeout | `TIMEOUT = 30000` | `TIMEOUT = 30` | `Timeout = 30*time.Second` | `TIMEOUT: u64 = 30` |
 
 ---
 
@@ -203,9 +279,11 @@ Variables que representan lo mismo con nombres diferentes.
 - `isLoading` vs `loading` vs `isLoad`
 - Inconsistencias en convenciones (camelCase vs snake_case)
 
-**Reportar:**
-- Las variaciones encontradas
-- Nombre consistente sugerido
+| Aspecto | JS/TS | Python | Go | Rust |
+|---------|-------|--------|-----|------|
+| Variables | camelCase | snake_case | camelCase | snake_case |
+| Funciones | camelCase | snake_case | PascalCase | snake_case |
+| Constantes | UPPER_SNAKE | UPPER_SNAKE | PascalCase | UPPER_SNAKE |
 
 ---
 
@@ -213,16 +291,42 @@ Variables que representan lo mismo con nombres diferentes.
 
 Estructuras de código que se repiten con el mismo propósito.
 
-**Buscar:**
-- Try/catch con mismo manejo de error
-- Fetch/API calls con estructura idéntica
-- useState + useEffect para data fetching
-- Mapeos y transformaciones repetidas
+#### Ejemplos por lenguaje:
 
-**Reportar:**
-- El patrón identificado
-- Dónde se repite
-- Abstracción sugerida (hook, utilidad, wrapper, etc.)
+**JavaScript/TypeScript:**
+```typescript
+// ❌ Repetido: fetch + loading + error
+const [loading, setLoading] = useState(false)
+const [data, setData] = useState(null)
+useEffect(() => { fetch()... }, [])
+// ✅ Custom hook o React Query
+const { data, loading } = useFetch(url)
+```
+
+**Python:**
+```python
+# ❌ Repetido: try + log + raise
+try: result = operation()
+except Exception as e:
+    logger.error(e)
+    raise
+# ✅ Decorator
+@log_errors
+def operation(): ...
+```
+
+**Go:**
+```go
+// ❌ Repetido: error wrapping
+if err != nil {
+    log.Printf("error: %v", err)
+    return fmt.Errorf("failed: %w", err)
+}
+// ✅ Helper
+if err != nil {
+    return errors.Wrap(err, "context")
+}
+```
 
 ---
 
@@ -235,6 +339,7 @@ Estructuras de código que se repiten con el mismo propósito.
 
 **Fecha:** [fecha actual]
 **Alcance:** `[ruta, descripción o "proyecto completo"]`
+**Lenguaje(s):** [detectados]
 **Archivos analizados:** [número]
 **Líneas de código totales:** ~[número]
 
@@ -348,14 +453,15 @@ Estructuras de código que se repiten con el mismo propósito.
 ## Reglas de Operación
 
 1. **Solo lectura**: No modificar ningún archivo, solo analizar y reportar
-2. **Interpreta inteligentemente**: Buscar archivos relacionados con lo que pida el usuario
-3. **Confirma si hay ambigüedad**: Si hay múltiples coincidencias, pregunta
-4. **Sé exhaustivo**: Lee todos los archivos del alcance
-5. **Sé específico**: Indica archivos y líneas exactas
-6. **Prioriza por impacto**: Lo que más se repite primero
-7. **Sugiere soluciones concretas**: No solo señales problemas, propón extracciones
-8. **Ignora falsos positivos**: Código similar por necesidad (tests, migrations) no cuenta
-9. **Considera el contexto**: A veces la duplicación es intencional
-10. **Respeta estándares del proyecto**: Usa CLAUDE.md/AGENTS.md como referencia
-11. **Reconoce lo bueno**: Menciona abstracciones bien hechas
-12. **Cuantifica el impacto**: "X líneas reducibles" ayuda a priorizar
+2. **Detecta el lenguaje**: Adapta ejemplos y sugerencias al lenguaje del proyecto
+3. **Interpreta inteligentemente**: Buscar archivos relacionados con lo que pida el usuario
+4. **Confirma si hay ambigüedad**: Si hay múltiples coincidencias, pregunta
+5. **Sé exhaustivo**: Lee todos los archivos del alcance
+6. **Sé específico**: Indica archivos y líneas exactas
+7. **Prioriza por impacto**: Lo que más se repite primero
+8. **Sugiere soluciones concretas**: No solo señales problemas, propón extracciones
+9. **Ignora falsos positivos**: Código similar por necesidad (tests, migrations) no cuenta
+10. **Considera el contexto**: A veces la duplicación es intencional
+11. **Respeta estándares del proyecto**: Usa CLAUDE.md/AGENTS.md como referencia
+12. **Reconoce lo bueno**: Menciona abstracciones bien hechas
+13. **Cuantifica el impacto**: "X líneas reducibles" ayuda a priorizar
