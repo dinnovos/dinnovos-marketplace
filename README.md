@@ -1,46 +1,46 @@
 # 🤙 Bro Code Tools - Claude Code Plugin Marketplace
 
-Hey bro! Suite de herramientas de análisis de código para Claude Code.
+Hey bro! Code analysis tools suite for Claude Code.
 
-## ✨ Características
+## ✨ Features
 
-- 🌐 **Políglota**: Soporta JavaScript/TypeScript, Python, Go, Rust, PHP, Ruby, Java, C#
-- 🔍 **Detección automática**: Identifica el lenguaje y adapta el análisis
-- 🛡️ **Análisis completo**: Code review, seguridad, rendimiento, refactoring
-- 💡 **Ideas creativas**: Genera ideas y soluciones con búsqueda web
+- 🌐 **Polyglot**: Supports JavaScript/TypeScript, Python, Go, Rust, PHP, Ruby, Java, C#
+- 🔍 **Auto-detection**: Identifies the language and adapts the analysis
+- 🛡️ **Complete analysis**: Code review, security, performance, refactoring
+- 💡 **Creative ideas**: Generate ideas and solutions with web search
 
 ---
 
-## 📦 Comandos Disponibles
+## 📦 Available Commands
 
-| Comando | Descripción |
+| Command | Description |
 |---------|-------------|
-| `/bro-commit-this` | Crea commits automáticos con Conventional Commits |
-| `/bro-review-before-i-screw-up` | Auditoría de cambios antes del commit (no la cagues!) |
-| `/bro-review-this` | Revisión completa de calidad de código |
-| `/bro-is-this-safe` | Escaneo de seguridad (OWASP Top 10) |
-| `/bro-this-is-slow` | Detectar problemas de rendimiento |
-| `/bro-refactor-this` | Encontrar oportunidades de refactorización |
-| `/bro-explain-this` | Explicar arquitectura y flujos del proyecto |
-| `/bro-inspire-me` | Ideas creativas y soluciones a problemas |
+| `/bro-commit-this` | Create automatic commits with Conventional Commits |
+| `/bro-review-before-i-screw-up` | Audit changes before commit (don't screw up!) |
+| `/bro-review-this` | Complete code quality review |
+| `/bro-is-this-safe` | Security scan (OWASP Top 10) |
+| `/bro-this-is-slow` | Detect performance issues |
+| `/bro-refactor-this` | Find refactoring opportunities |
+| `/bro-explain-this` | Explain project architecture and flows |
+| `/bro-inspire-me` | Creative ideas and problem solutions |
 
 ---
 
-## 🚀 Instalación
+## 🚀 Installation
 
-### Paso 1: Agregar el Marketplace
+### Step 1: Add the Marketplace
 
 ```bash
 /plugin marketplace add dinnovos/dinnovos-marketplace
 ```
 
-### Paso 2: Instalar el Plugin
+### Step 2: Install the Plugin
 
 ```bash
 /plugin install bro-code-tools
 ```
 
-### Verificar Instalación
+### Verify Installation
 
 ```bash
 /plugin list
@@ -48,43 +48,43 @@ Hey bro! Suite de herramientas de análisis de código para Claude Code.
 
 ---
 
-## 🎯 Uso
+## 🎯 Usage
 
 ```bash
-# Crear commit automático con mensaje descriptivo
+# Create automatic commit with descriptive message
 /bro-commit-this
 
-# Revisar cambios antes de commit (no la cagues!)
+# Review changes before commit (don't screw up!)
 /bro-review-before-i-screw-up
 
-# Revisar código específico
+# Review specific code
 /bro-review-this src/services/
 
-# Escanear seguridad
+# Security scan
 /bro-is-this-safe src/api/
 
-# Auditar rendimiento
+# Performance audit
 /bro-this-is-slow
 
-# Buscar oportunidades de refactor
+# Find refactoring opportunities
 /bro-refactor-this
 
-# Explicar arquitectura
+# Explain architecture
 /bro-explain-this
 
-# Generar ideas creativas o resolver problemas
-/bro-inspire-me mejorar el onboarding
-/bro-inspire-me el build tarda demasiado
+# Generate creative ideas or solve problems
+/bro-inspire-me improve the onboarding
+/bro-inspire-me the build takes too long
 ```
 
 ---
 
-## 📁 Estructura del Plugin
+## 📁 Plugin Structure
 
 ```
 bro-code-tools/
 ├── .claude-plugin/
-│   └── plugin.json              # Manifest del plugin
+│   └── plugin.json              # Plugin manifest
 └── commands/                     # Slash commands
     ├── bro-commit-this.md
     ├── bro-review-before-i-screw-up.md
@@ -98,9 +98,9 @@ bro-code-tools/
 
 ---
 
-## 🌐 Lenguajes Soportados
+## 🌐 Supported Languages
 
-| Lenguaje | Detección |
+| Language | Detection |
 |----------|-----------|
 | JavaScript/TypeScript | `package.json` |
 | Python | `pyproject.toml` |
@@ -113,7 +113,7 @@ bro-code-tools/
 
 ---
 
-## 🔄 Actualización
+## 🔄 Update
 
 ```bash
 /plugin marketplace update dinnovos/dinnovos-marketplace
@@ -122,7 +122,7 @@ bro-code-tools/
 
 ---
 
-## 🗑️ Desinstalación
+## 🗑️ Uninstall
 
 ```bash
 /plugin remove bro-code-tools
@@ -131,16 +131,16 @@ bro-code-tools/
 
 ---
 
-## 📄 Licencia
+## 📄 License
 
-MIT License - Usa estas herramientas libremente.
-
----
-
-## 🤝 Contribuciones
-
-¿Ideas para nuevos commands? ¡Abre un Issue o PR!
+MIT License - Use these tools freely.
 
 ---
 
-Creado por Dinnovos | Compatible con Claude Code 2.0+
+## 🤝 Contributions
+
+Ideas for new commands? Open an Issue or PR!
+
+---
+
+Created by Dinnovos | Compatible with Claude Code 2.0+
