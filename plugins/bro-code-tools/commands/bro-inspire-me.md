@@ -1,88 +1,88 @@
 ---
 name: bro-inspire-me
-description: Genera ideas creativas y soluciones a problemas técnicos - desde enfoques conservadores hasta revolucionarios. Usa búsqueda web para inspiración. Requiere descripción. Soporta múltiples lenguajes. Solo lectura.
+description: Generates creative ideas and solutions to technical problems - from conservative to revolutionary approaches. Uses web search for inspiration. Requires description. Multi-language support. Read-only.
 model: opus
 allowed-tools: ["Bash(read-only)", "Read", "Grep", "Glob", "WebSearch", "WebFetch"]
 ---
 
-# Inspire Me - Ideas Creativas y Solución de Problemas
+# Inspire Me - Creative Ideas and Problem Solving
 
-Analiza el proyecto y genera 5-10 ideas/soluciones ordenadas de conservadoras a revolucionarias. **Solo lectura, no modifica nada. Usa búsqueda web para inspiración. Soporta múltiples lenguajes.**
+Analyze the project and generate 5-10 ideas/solutions ordered from conservative to revolutionary. **Read-only, doesn't modify anything. Uses web search for inspiration. Multi-language support.**
 
-## Dos Modos de Operación
+## Two Operating Modes
 
-### 🎨 Modo Ideas Creativas
-Para explorar nuevas funcionalidades, mejoras o direcciones para el proyecto.
+### Creative Ideas Mode
+To explore new features, improvements or directions for the project.
 
-### 🔧 Modo Resolución de Problemas
-Para encontrar soluciones creativas a problemas técnicos que el programador enfrenta.
-
----
-
-## Entrada del Usuario
-
-El usuario DEBE especificar qué necesita. **El parámetro es OBLIGATORIO.**
-
-**Ejemplos - Ideas Creativas:**
-- `/bro-inspire-me nuevas formas de monetización`
-- `/bro-inspire-me ideas para mejorar el onboarding`
-- `/bro-inspire-me cómo hacer el dashboard más interactivo`
-- `/bro-inspire-me features para diferenciarnos de la competencia`
-- `/bro-inspire-me explorar integraciones con IA`
-
-**Ejemplos - Resolución de Problemas:**
-- `/bro-inspire-me el build tarda demasiado tiempo`
-- `/bro-inspire-me tengo memory leaks en producción`
-- `/bro-inspire-me la base de datos se vuelve lenta con muchos registros`
-- `/bro-inspire-me los tests son flaky y fallan aleatoriamente`
-- `/bro-inspire-me cómo manejar la concurrencia en este módulo`
-- `/bro-inspire-me el código legacy es difícil de mantener`
-- `/bro-inspire-me necesito escalar a miles de usuarios simultáneos`
-
-**Si el usuario NO proporciona descripción:**
-- Responde: "Para inspirarte necesito saber qué necesitas. Por favor, ejecuta el comando con una descripción, por ejemplo: `/bro-inspire-me mejorar el onboarding` o `/bro-inspire-me el build tarda demasiado`"
-
-> **Nota:** El usuario describe un área creativa O un problema técnico. Sin esta descripción, el comando NO puede ejecutarse.
+### Problem Solving Mode
+To find creative solutions to technical problems the developer is facing.
 
 ---
 
-## Paso 0: Detectar Modo de Operación
+## User Input
 
-Analiza la solicitud del usuario para determinar el modo:
+The user MUST specify what they need. **The parameter is REQUIRED.**
 
-### 🎨 Es MODO IDEAS CREATIVAS si:
-- Menciona "ideas", "features", "funcionalidades", "mejorar", "agregar"
-- Habla de oportunidades, crecimiento, diferenciación, innovación
-- Pregunta "qué podría hacer", "cómo podría mejorar", "qué agregaría"
-- Explora nuevas direcciones para el producto
+**Examples - Creative Ideas:**
+- `/bro-inspire-me new ways to monetize`
+- `/bro-inspire-me ideas to improve onboarding`
+- `/bro-inspire-me how to make the dashboard more interactive`
+- `/bro-inspire-me features to differentiate from competition`
+- `/bro-inspire-me explore AI integrations`
 
-### 🔧 Es MODO RESOLUCIÓN DE PROBLEMAS si:
-- Describe un problema actual: "tarda", "falla", "no funciona", "es lento"
-- Menciona errores, bugs, memory leaks, performance issues
-- Usa palabras como "problema", "issue", "error", "difícil", "complicado"
-- Pregunta "cómo resolver", "cómo arreglar", "cómo solucionar"
-- Describe una limitación técnica actual
+**Examples - Problem Solving:**
+- `/bro-inspire-me the build takes too long`
+- `/bro-inspire-me I have memory leaks in production`
+- `/bro-inspire-me the database gets slow with many records`
+- `/bro-inspire-me tests are flaky and fail randomly`
+- `/bro-inspire-me how to handle concurrency in this module`
+- `/bro-inspire-me legacy code is hard to maintain`
+- `/bro-inspire-me need to scale to thousands of simultaneous users`
 
-**Importante:** Adapta todo el análisis y las búsquedas según el modo detectado.
+**If the user does NOT provide a description:**
+- Respond: "To inspire you I need to know what you need. Please run the command with a description, for example: `/bro-inspire-me improve onboarding` or `/bro-inspire-me the build takes too long`"
+
+> **Note:** The user describes a creative area OR a technical problem. Without this description, the command CANNOT execute.
 
 ---
 
-## Paso 1: Entender el Proyecto
+## Step 0: Detect Operating Mode
 
-### Detectar Stack y Arquitectura
+Analyze the user's request to determine the mode:
+
+### It's CREATIVE IDEAS MODE if:
+- Mentions "ideas", "features", "functionality", "improve", "add"
+- Talks about opportunities, growth, differentiation, innovation
+- Asks "what could I do", "how could I improve", "what would I add"
+- Explores new directions for the product
+
+### It's PROBLEM SOLVING MODE if:
+- Describes a current problem: "takes too long", "fails", "doesn't work", "is slow"
+- Mentions errors, bugs, memory leaks, performance issues
+- Uses words like "problem", "issue", "error", "difficult", "complicated"
+- Asks "how to solve", "how to fix", "how to resolve"
+- Describes a current technical limitation
+
+**Important:** Adapt all analysis and searches according to the detected mode.
+
+---
+
+## Step 1: Understand the Project
+
+### Detect Stack and Architecture
 
 ```bash
-# Estructura general
+# General structure
 find . -type d -maxdepth 3 | grep -v node_modules | grep -v vendor | grep -v target | grep -v __pycache__ | sort
 
-# Ver archivos principales
+# View main files
 ls -la
 ```
 
-### Detección por archivos:
+### Detection by files:
 
-| Archivo | Stack |
-|---------|-------|
+| File | Stack |
+|------|-------|
 | `package.json` | Node.js / JavaScript / TypeScript |
 | `tsconfig.json` | TypeScript |
 | `pyproject.toml` / `requirements.txt` | Python |
@@ -93,415 +93,415 @@ ls -la
 | `pom.xml` / `build.gradle` | Java |
 | `*.csproj` | C# / .NET |
 
-### Leer Documentación y Configuración
+### Read Documentation and Configuration
 
 ```bash
-# Configuración del proyecto
+# Project configuration
 cat package.json pyproject.toml go.mod Cargo.toml composer.json Gemfile pom.xml 2>/dev/null
 
-# Documentación
+# Documentation
 cat README.md 2>/dev/null
 cat CLAUDE.md 2>/dev/null
 cat AGENTS.md 2>/dev/null
 ```
 
-### Identificar:
-- **Propósito**: ¿Qué problema resuelve?
-- **Usuarios objetivo**: ¿Quién lo usa?
-- **Funcionalidades principales**: ¿Qué hace actualmente?
-- **Modelo de negocio**: ¿Cómo genera valor? (si aplica)
-- **Estado actual**: ¿MVP, producto maduro, legacy?
+### Identify:
+- **Purpose**: What problem does it solve?
+- **Target users**: Who uses it?
+- **Main features**: What does it currently do?
+- **Business model**: How does it generate value? (if applicable)
+- **Current state**: MVP, mature product, legacy?
 
 ---
 
-## Paso 2: Analizar el Área de Exploración
+## Step 2: Analyze the Exploration Area
 
-Buscar archivos y código relacionado con el área que el usuario especificó:
+Search for files and code related to the area the user specified:
 
 ```bash
-# Buscar por nombre de archivo
-find . -type f -iname "*<término>*" | grep -v node_modules | grep -v vendor | head -20
+# Search by filename
+find . -type f -iname "*<term>*" | grep -v node_modules | grep -v vendor | head -20
 
-# Buscar por contenido
-grep -ril "<término>" --include="*.ts" --include="*.tsx" --include="*.js" --include="*.jsx" --include="*.py" --include="*.go" --include="*.rs" --include="*.php" --include="*.rb" --include="*.java" --include="*.cs" | grep -v node_modules | head -20
+# Search by content
+grep -ril "<term>" --include="*.ts" --include="*.tsx" --include="*.js" --include="*.jsx" --include="*.py" --include="*.go" --include="*.rs" --include="*.php" --include="*.rb" --include="*.java" --include="*.cs" | grep -v node_modules | head -20
 ```
 
-Lee los archivos encontrados para entender:
-- Estado actual de esa área
-- Qué funcionalidad existe
-- Qué limitaciones tiene
-- Qué tecnologías usa
-- Qué oportunidades de mejora hay
+Read the found files to understand:
+- Current state of that area
+- What functionality exists
+- What limitations it has
+- What technologies it uses
+- What improvement opportunities exist
 
 ---
 
-## Paso 3: Investigar en la Web
+## Step 3: Research on the Web
 
-**IMPORTANTE:** Usa WebSearch para buscar información externa. Esto es OBLIGATORIO.
-
----
-
-### 🎨 Si es MODO IDEAS CREATIVAS:
-
-```
-# Tendencias del dominio
-WebSearch: "[tipo de app] innovative features 2024 2025"
-WebSearch: "[industria/dominio] tech trends"
-
-# Proyectos similares exitosos
-WebSearch: "best [tipo de app] examples"
-WebSearch: "[competidor conocido] features"
-WebSearch: "alternatives to [producto similar]"
-
-# Según el área específica del usuario
-WebSearch: "[área específica] best practices 2024"
-WebSearch: "innovative [área] solutions"
-WebSearch: "[área] UX patterns"
-```
+**IMPORTANT:** Use WebSearch to find external information. This is REQUIRED.
 
 ---
 
-### 🔧 Si es MODO RESOLUCIÓN DE PROBLEMAS:
+### If it's CREATIVE IDEAS MODE:
 
 ```
-# Soluciones al problema específico
-WebSearch: "[problema específico] solutions [stack]"
-WebSearch: "how to fix [problema] in [tecnología]"
-WebSearch: "[problema] best practices"
+# Domain trends
+WebSearch: "[app type] innovative features 2024 2025"
+WebSearch: "[industry/domain] tech trends"
 
-# Casos de estudio y experiencias
-WebSearch: "[problema] case study"
-WebSearch: "how [empresa conocida] solved [problema]"
-WebSearch: "[problema] at scale"
+# Similar successful projects
+WebSearch: "best [app type] examples"
+WebSearch: "[known competitor] features"
+WebSearch: "alternatives to [similar product]"
 
-# Herramientas y técnicas
-WebSearch: "[stack] [problema] tools"
-WebSearch: "[problema] debugging techniques"
-WebSearch: "[problema] profiling [tecnología]"
-
-# Patrones y arquitecturas
-WebSearch: "[problema] architecture patterns"
-WebSearch: "[problema] design patterns [stack]"
+# Based on user's specific area
+WebSearch: "[specific area] best practices 2024"
+WebSearch: "innovative [area] solutions"
+WebSearch: "[area] UX patterns"
 ```
 
 ---
 
-### Si encuentras algo interesante:
+### If it's PROBLEM SOLVING MODE:
 
-Usa WebFetch para leer el contenido completo del artículo o página.
+```
+# Solutions to the specific problem
+WebSearch: "[specific problem] solutions [stack]"
+WebSearch: "how to fix [problem] in [technology]"
+WebSearch: "[problem] best practices"
 
-### Registra todas las fuentes:
+# Case studies and experiences
+WebSearch: "[problem] case study"
+WebSearch: "how [known company] solved [problem]"
+WebSearch: "[problem] at scale"
 
-Guarda URL, título y qué insight obtuviste de cada fuente para incluirlo en el informe.
+# Tools and techniques
+WebSearch: "[stack] [problem] tools"
+WebSearch: "[problem] debugging techniques"
+WebSearch: "[problem] profiling [technology]"
 
----
-
-## Paso 4: Generar Ideas/Soluciones
-
-Genera entre **5 y 10 ideas/soluciones** ordenadas por nivel de creatividad:
-
-### Escala de Creatividad (aplica a ambos modos)
-
-| Nivel | Tipo | 🎨 Ideas Creativas | 🔧 Resolución de Problemas |
-|-------|------|-------------------|---------------------------|
-| ⭐ (1-2) | **Conservadora** | Mejoras incrementales | Solución directa y probada |
-| ⭐⭐ (3-4) | **Moderada** | Nuevas features alcanzables | Optimización inteligente |
-| ⭐⭐⭐ (5-6) | **Audaz** | Cambios de enfoque | Rediseño parcial del sistema |
-| ⭐⭐⭐⭐ (7-8) | **Revolucionaria** | Paradigmas nuevos | Cambio de arquitectura |
-| ⭐⭐⭐⭐⭐ (9-10) | **Visionaria** | Ideas disruptivas | Replanteamiento total |
-
-### Criterios para cada idea/solución:
-
-1. **Viabilidad técnica**: ¿Es posible con el stack actual? ¿Qué cambios requiere?
-2. **Impacto**: ¿Cuánto mejora la situación? ¿Resuelve el problema de raíz?
-3. **Esfuerzo estimado**: ¿Días, semanas, meses?
-4. **Riesgo**: ¿Qué podría salir mal? ¿Es reversible?
-5. **Inspiración**: ¿De dónde viene la idea? (fuente si aplica)
+# Patterns and architectures
+WebSearch: "[problem] architecture patterns"
+WebSearch: "[problem] design patterns [stack]"
+```
 
 ---
 
-### 🎨 Ejemplos - Qué hace una IDEA creativa:
+### If you find something interesting:
 
-❌ **NO creativo**: "Agregar login con Google"
-✅ **Creativo**: "Sistema de acceso sin contraseña usando magic links + biometría del dispositivo"
+Use WebFetch to read the full content of the article or page.
 
-❌ **NO creativo**: "Mejorar el dashboard"
-✅ **Creativo**: "Dashboard que se auto-adapta según el rol y comportamiento del usuario con widgets arrastrables"
+### Record all sources:
 
-❌ **NO creativo**: "Agregar notificaciones"
-✅ **Creativo**: "Sistema de 'nudges' inteligentes que predice cuándo el usuario necesita actuar antes de que sea urgente"
+Save URL, title and what insight you got from each source to include in the report.
 
 ---
 
-### 🔧 Ejemplos - Qué hace una SOLUCIÓN creativa:
+## Step 4: Generate Ideas/Solutions
 
-**Problema: "El build tarda demasiado"**
+Generate between **5 and 10 ideas/solutions** ordered by creativity level:
 
-❌ **NO creativo**: "Usar más RAM"
-✅ **Creativo (⭐)**: "Implementar caché de compilación con esbuild/SWC"
-✅ **Creativo (⭐⭐⭐)**: "Migrar a builds incrementales con Turborepo + remote caching"
-✅ **Creativo (⭐⭐⭐⭐⭐)**: "Arquitectura de micro-frontends donde cada módulo compila independiente"
+### Creativity Scale (applies to both modes)
 
-**Problema: "La base de datos es lenta con muchos registros"**
+| Level | Type | Creative Ideas | Problem Solving |
+|-------|------|----------------|-----------------|
+| ⭐ (1-2) | **Conservative** | Incremental improvements | Direct and proven solution |
+| ⭐⭐ (3-4) | **Moderate** | New achievable features | Smart optimization |
+| ⭐⭐⭐ (5-6) | **Bold** | Approach changes | Partial system redesign |
+| ⭐⭐⭐⭐ (7-8) | **Revolutionary** | New paradigms | Architecture change |
+| ⭐⭐⭐⭐⭐ (9-10) | **Visionary** | Disruptive ideas | Total rethinking |
 
-❌ **NO creativo**: "Agregar más índices"
-✅ **Creativo (⭐)**: "Analizar query plans y optimizar las N consultas más lentas"
-✅ **Creativo (⭐⭐⭐)**: "Implementar read replicas + connection pooling con PgBouncer"
-✅ **Creativo (⭐⭐⭐⭐⭐)**: "CQRS con Event Sourcing - separar lecturas/escrituras completamente"
+### Criteria for each idea/solution:
 
-**Problema: "Memory leaks en producción"**
-
-❌ **NO creativo**: "Reiniciar el servidor cada día"
-✅ **Creativo (⭐)**: "Heap snapshots comparativos + identificar objetos que no se liberan"
-✅ **Creativo (⭐⭐⭐)**: "Implementar circuit breakers + graceful degradation cuando memoria > 80%"
-✅ **Creativo (⭐⭐⭐⭐⭐)**: "Migrar a arquitectura serverless donde cada request es stateless"
-
----
-
-## Paso 5: Generar Informe
-
-**Responde directamente en el chat usando el template según el modo:**
+1. **Technical viability**: Is it possible with the current stack? What changes does it require?
+2. **Impact**: How much does it improve the situation? Does it solve the root problem?
+3. **Estimated effort**: Days, weeks, months?
+4. **Risk**: What could go wrong? Is it reversible?
+5. **Inspiration**: Where did the idea come from? (source if applicable)
 
 ---
 
-### 🎨 TEMPLATE MODO IDEAS CREATIVAS:
+### Examples - What makes a CREATIVE idea:
+
+**NOT creative**: "Add Google login"
+**Creative**: "Passwordless access system using magic links + device biometrics"
+
+**NOT creative**: "Improve the dashboard"
+**Creative**: "Self-adapting dashboard based on user role and behavior with draggable widgets"
+
+**NOT creative**: "Add notifications"
+**Creative**: "Smart 'nudge' system that predicts when users need to act before it becomes urgent"
+
+---
+
+### Examples - What makes a CREATIVE solution:
+
+**Problem: "The build takes too long"**
+
+**NOT creative**: "Use more RAM"
+**Creative (⭐)**: "Implement compilation cache with esbuild/SWC"
+**Creative (⭐⭐⭐)**: "Migrate to incremental builds with Turborepo + remote caching"
+**Creative (⭐⭐⭐⭐⭐)**: "Micro-frontends architecture where each module compiles independently"
+
+**Problem: "Database is slow with many records"**
+
+**NOT creative**: "Add more indexes"
+**Creative (⭐)**: "Analyze query plans and optimize the N slowest queries"
+**Creative (⭐⭐⭐)**: "Implement read replicas + connection pooling with PgBouncer"
+**Creative (⭐⭐⭐⭐⭐)**: "CQRS with Event Sourcing - completely separate reads/writes"
+
+**Problem: "Memory leaks in production"**
+
+**NOT creative**: "Restart the server every day"
+**Creative (⭐)**: "Comparative heap snapshots + identify objects that aren't being released"
+**Creative (⭐⭐⭐)**: "Implement circuit breakers + graceful degradation when memory > 80%"
+**Creative (⭐⭐⭐⭐⭐)**: "Migrate to serverless architecture where each request is stateless"
+
+---
+
+## Step 5: Generate Report
+
+**Respond directly in the chat using the template according to the mode:**
+
+---
+
+### CREATIVE IDEAS MODE TEMPLATE:
 
 ```markdown
-# 💡 INFORME DE IDEAS CREATIVAS BRO
+# BRO CREATIVE IDEAS REPORT
 
-**Fecha:** [fecha actual]
-**Proyecto:** `[nombre del proyecto]`
-**Área explorada:** [área especificada]
-**Stack:** [tecnologías detectadas]
-**Modo:** 🎨 Ideas Creativas
+**Date:** [current date]
+**Project:** `[project name]`
+**Area explored:** [specified area]
+**Stack:** [detected technologies]
+**Mode:** Creative Ideas
 
 ---
 
-## 📋 Resumen del Proyecto Analizado
+## Project Summary
 
-**Tipo:** [Web App | API | CLI | Mobile | Library | etc.]
-**Propósito:** [En una oración, qué problema resuelve]
-**Usuarios objetivo:** [A quién sirve]
+**Type:** [Web App | API | CLI | Mobile | Library | etc.]
+**Purpose:** [In one sentence, what problem it solves]
+**Target users:** [Who it serves]
 
-**Funcionalidades principales:**
+**Main features:**
 - [Feature 1]
 - [Feature 2]
 - [Feature 3]
 
-**Estado actual del área explorada:**
-[Descripción breve de cómo está actualmente esa área. Qué existe, qué falta, qué limitaciones tiene]
+**Current state of explored area:**
+[Brief description of how that area currently is. What exists, what's missing, what limitations it has]
 
 ---
 
-## 🔍 Fuentes de Inspiración Consultadas
+## Inspiration Sources Consulted
 
-| Fuente | Tipo | Insight clave |
-|--------|------|---------------|
-| [nombre/URL] | [Artículo/Producto/Tendencia] | [Qué aprendimos de esta fuente] |
-| [nombre/URL] | [Artículo/Producto/Tendencia] | [Qué aprendimos de esta fuente] |
+| Source | Type | Key insight |
+|--------|------|-------------|
+| [name/URL] | [Article/Product/Trend] | [What we learned from this source] |
+| [name/URL] | [Article/Product/Trend] | [What we learned from this source] |
 
 ---
 
-## 🚀 Ideas Generadas
+## Generated Ideas
 ```
 
 ---
 
-### 🔧 TEMPLATE MODO RESOLUCIÓN DE PROBLEMAS:
+### PROBLEM SOLVING MODE TEMPLATE:
 
 ```markdown
-# 🔧 INFORME DE SOLUCIONES CREATIVAS BRO
+# BRO CREATIVE SOLUTIONS REPORT
 
-**Fecha:** [fecha actual]
-**Proyecto:** `[nombre del proyecto]`
-**Problema:** [descripción del problema del usuario]
-**Stack:** [tecnologías detectadas]
-**Modo:** 🔧 Resolución de Problemas
-
----
-
-## 📋 Análisis del Problema
-
-**Síntomas reportados:**
-[Lo que el usuario describió]
-
-**Contexto técnico:**
-- **Stack:** [tecnologías]
-- **Archivos relacionados:** [archivos encontrados]
-- **Escala:** [usuarios, datos, requests, etc. si aplica]
-
-**Diagnóstico inicial:**
-[Qué podría estar causando el problema basado en el análisis del código]
-
-**Impacto actual:**
-[Cómo afecta al proyecto/usuarios/desarrollo]
+**Date:** [current date]
+**Project:** `[project name]`
+**Problem:** [user's problem description]
+**Stack:** [detected technologies]
+**Mode:** Problem Solving
 
 ---
 
-## 🔍 Investigación Realizada
+## Problem Analysis
 
-| Fuente | Tipo | Insight clave |
-|--------|------|---------------|
-| [nombre/URL] | [Artículo/StackOverflow/Docs] | [Qué aprendimos] |
-| [nombre/URL] | [Case Study/Tool] | [Qué aprendimos] |
+**Reported symptoms:**
+[What the user described]
+
+**Technical context:**
+- **Stack:** [technologies]
+- **Related files:** [found files]
+- **Scale:** [users, data, requests, etc. if applicable]
+
+**Initial diagnosis:**
+[What could be causing the problem based on code analysis]
+
+**Current impact:**
+[How it affects the project/users/development]
 
 ---
 
-## 🚀 Soluciones Propuestas
+## Research Conducted
+
+| Source | Type | Key insight |
+|--------|------|-------------|
+| [name/URL] | [Article/StackOverflow/Docs] | [What we learned] |
+| [name/URL] | [Case Study/Tool] | [What we learned] |
+
+---
+
+## Proposed Solutions
 ```
 
 ---
 
-### Contenido de Ideas/Soluciones (igual para ambos modos):
+### Ideas/Solutions Content (same for both modes):
 
-### 💡 Idea 1: [Título Llamativo y Memorable]
+### Idea 1: [Catchy and Memorable Title]
 
-**Nivel de creatividad:** ⭐ (1-2) — Conservadora
-**Esfuerzo estimado:** [X días/semanas] — [Bajo/Medio/Alto]
+**Creativity level:** ⭐ (1-2) — Conservative
+**Estimated effort:** [X days/weeks] — [Low/Medium/High]
 
-**La idea:**
-[Explicación clara en 2-3 párrafos. Qué es, cómo funcionaría desde la perspectiva del usuario, qué problema resuelve o qué oportunidad aprovecha]
+**The idea:**
+[Clear explanation in 2-3 paragraphs. What it is, how it would work from the user's perspective, what problem it solves or what opportunity it leverages]
 
-**Por qué es viable técnicamente:**
-- [El stack actual ya tiene X que facilita esto]
-- [Existe librería/servicio Y que resuelve la parte compleja]
-- [Patrón similar ya implementado en el módulo Z]
+**Why it's technically viable:**
+- [The current stack already has X that facilitates this]
+- [There's a library/service Y that solves the complex part]
+- [Similar pattern already implemented in module Z]
 
-**Tecnologías/enfoques sugeridos:**
-- **[Tecnología 1]**: [para qué se usaría]
-- **[Tecnología 2]**: [para qué se usaría]
-- **[Patrón/enfoque]**: [cómo aplicarlo]
+**Suggested technologies/approaches:**
+- **[Technology 1]**: [what it would be used for]
+- **[Technology 2]**: [what it would be used for]
+- **[Pattern/approach]**: [how to apply it]
 
-**Impacto esperado:**
-[Cómo mejoraría la experiencia de usuario, métricas que podrían mejorar, valor de negocio]
+**Expected impact:**
+[How it would improve user experience, metrics that could improve, business value]
 
-**Inspiración:** [De dónde vino la idea - fuente web, competidor, tendencia, etc.]
-
----
-
-### 💡 Idea 2: [Título Llamativo]
-
-**Nivel de creatividad:** ⭐⭐ (3-4) — Moderada
-**Esfuerzo estimado:** [X semanas] — [Medio]
-
-[Misma estructura...]
+**Inspiration:** [Where the idea came from - web source, competitor, trend, etc.]
 
 ---
 
-### 💡 Idea 3: [Título Llamativo]
+### Idea 2: [Catchy Title]
 
-**Nivel de creatividad:** ⭐⭐⭐ (5-6) — Audaz
-**Esfuerzo estimado:** [X semanas/meses] — [Medio/Alto]
+**Creativity level:** ⭐⭐ (3-4) — Moderate
+**Estimated effort:** [X weeks] — [Medium]
 
-[Misma estructura...]
-
----
-
-### 💡 Idea 4: [Título Llamativo]
-
-**Nivel de creatividad:** ⭐⭐⭐⭐ (7-8) — Revolucionaria
-**Esfuerzo estimado:** [X meses] — [Alto]
-
-[Misma estructura...]
+[Same structure...]
 
 ---
 
-### 💡 Idea 5: [Título Llamativo]
+### Idea 3: [Catchy Title]
 
-**Nivel de creatividad:** ⭐⭐⭐⭐⭐ (9-10) — Visionaria
-**Esfuerzo estimado:** [X meses] — [Alto]
+**Creativity level:** ⭐⭐⭐ (5-6) — Bold
+**Estimated effort:** [X weeks/months] — [Medium/High]
 
-[Misma estructura...]
-
----
-
-[Agregar más ideas si son relevantes, hasta 10 máximo. Asegúrate de tener variedad en todos los niveles de creatividad]
+[Same structure...]
 
 ---
 
-## 📊 Matriz de Decisión
+### Idea 4: [Catchy Title]
 
-| Idea | Creatividad | Viabilidad | Impacto | Esfuerzo | Recomendación |
-|------|-------------|------------|---------|----------|---------------|
-| [Idea 1] | ⭐ | Alta | Medio | Bajo | 🟢 Quick win |
-| [Idea 2] | ⭐⭐ | Alta | Alto | Medio | 🟢 Priorizar |
-| [Idea 3] | ⭐⭐⭐ | Media | Alto | Medio | 🟡 Evaluar |
-| [Idea 4] | ⭐⭐⭐⭐ | Media | Muy Alto | Alto | 🟡 Planificar |
-| [Idea 5] | ⭐⭐⭐⭐⭐ | Baja | Transformador | Muy Alto | 🔴 Visión futura |
+**Creativity level:** ⭐⭐⭐⭐ (7-8) — Revolutionary
+**Estimated effort:** [X months] — [High]
 
-**Leyenda:**
-- 🟢 = Implementar pronto
-- 🟡 = Evaluar con más detalle
-- 🔴 = Mantener en radar para el futuro
+[Same structure...]
 
 ---
 
-## 🎯 Recomendación
+### Idea 5: [Catchy Title]
 
-**Para comenzar hoy (quick wins):**
-1. [Acción concreta basada en ideas conservadoras]
-2. [Otra acción de bajo esfuerzo alto impacto]
+**Creativity level:** ⭐⭐⭐⭐⭐ (9-10) — Visionary
+**Estimated effort:** [X months] — [High]
 
-**Para planificar este mes:**
-1. [Acción basada en ideas moderadas/audaces]
-2. [Investigación o prototipo]
-
-**Para la visión a largo plazo:**
-1. [Cómo las ideas revolucionarias podrían evolucionar el producto]
-2. [Qué validar antes de invertir en ideas visionarias]
+[Same structure...]
 
 ---
 
-## ⚠️ Consideraciones
-
-**Riesgos a evaluar:**
-- [Riesgo 1 de alguna idea y cómo mitigarlo]
-- [Riesgo 2]
-
-**Dependencias:**
-- [Qué se necesitaría para implementar las ideas más ambiciosas]
-- [Skills o recursos que podrían faltar]
-
-**Validaciones recomendadas:**
-- [Cómo validar las ideas antes de invertir esfuerzo significativo]
-- [Métricas o feedback a recolectar]
+[Add more ideas if relevant, up to 10 maximum. Make sure to have variety across all creativity levels]
 
 ---
 
-## 💭 Reflexión Final
+## Decision Matrix
 
-[Un párrafo inspirador sobre el potencial del proyecto y cómo estas ideas podrían transformarlo. Invita al usuario a pensar más allá de lo obvio y considerar qué tipo de producto quiere construir]
+| Idea | Creativity | Viability | Impact | Effort | Recommendation |
+|------|------------|-----------|--------|--------|----------------|
+| [Idea 1] | ⭐ | High | Medium | Low | Quick win |
+| [Idea 2] | ⭐⭐ | High | High | Medium | Prioritize |
+| [Idea 3] | ⭐⭐⭐ | Medium | High | Medium | Evaluate |
+| [Idea 4] | ⭐⭐⭐⭐ | Medium | Very High | High | Plan |
+| [Idea 5] | ⭐⭐⭐⭐⭐ | Low | Transformative | Very High | Future vision |
+
+**Legend:**
+- Quick win / Prioritize = Implement soon
+- Evaluate = Evaluate in more detail
+- Plan / Future vision = Keep on radar for the future
+
+---
+
+## Recommendation
+
+**To start today (quick wins):**
+1. [Concrete action based on conservative ideas]
+2. [Another low effort high impact action]
+
+**To plan this month:**
+1. [Action based on moderate/bold ideas]
+2. [Research or prototype]
+
+**For long-term vision:**
+1. [How revolutionary ideas could evolve the product]
+2. [What to validate before investing in visionary ideas]
+
+---
+
+## Considerations
+
+**Risks to evaluate:**
+- [Risk 1 of some idea and how to mitigate it]
+- [Risk 2]
+
+**Dependencies:**
+- [What would be needed to implement the most ambitious ideas]
+- [Skills or resources that might be missing]
+
+**Recommended validations:**
+- [How to validate ideas before investing significant effort]
+- [Metrics or feedback to collect]
+
+---
+
+## Final Reflection
+
+[An inspiring paragraph about the project's potential and how these ideas could transform it. Invite the user to think beyond the obvious and consider what kind of product they want to build]
 ```
 
 ---
 
-## Reglas de Operación
+## Operating Rules
 
-### Generales (ambos modos):
+### General (both modes):
 
-1. **Solo lectura**: No modificar ningún archivo, solo analizar y generar ideas/soluciones
-2. **Usa búsqueda web**: Investiga en internet — esto es OBLIGATORIO
-3. **Sé genuinamente creativo**: Las propuestas deben sorprender, no ser obvias ni genéricas
-4. **Ordena por creatividad**: SIEMPRE de conservadora (⭐) a visionaria (⭐⭐⭐⭐⭐)
-5. **Fundamenta la viabilidad**: Cada propuesta debe ser técnicamente posible, explica cómo
-6. **Tecnologías concretas**: No digas "optimizar", di exactamente QUÉ y CÓMO
-7. **Estima el esfuerzo**: Da una idea realista del tiempo/recursos necesarios
-8. **Considera el contexto**: Las propuestas deben hacer sentido para ESTE proyecto específico
-9. **Cita tus fuentes**: Menciona de dónde vino la inspiración
-10. **Balancea la distribución**: Incluye propuestas en TODOS los niveles de creatividad
+1. **Read-only**: Don't modify any files, only analyze and generate ideas/solutions
+2. **Use web search**: Research on the internet — this is REQUIRED
+3. **Be genuinely creative**: Proposals should surprise, not be obvious or generic
+4. **Order by creativity**: ALWAYS from conservative (⭐) to visionary (⭐⭐⭐⭐⭐)
+5. **Justify viability**: Each proposal must be technically possible, explain how
+6. **Concrete technologies**: Don't say "optimize", say exactly WHAT and HOW
+7. **Estimate effort**: Give a realistic idea of time/resources needed
+8. **Consider context**: Proposals must make sense for THIS specific project
+9. **Cite your sources**: Mention where the inspiration came from
+10. **Balance distribution**: Include proposals at ALL creativity levels
 
-### 🎨 Modo Ideas Creativas:
+### Creative Ideas Mode:
 
-11. **Piensa en el usuario final**: ¿Cómo mejora esto su experiencia?
-12. **Evita lo genérico**: "Agregar login social" no es creativo; "Onboarding gamificado" sí lo es
-13. **Desafía el status quo**: Incluye ideas que hagan repensar el enfoque actual
-14. **Solo menciona tech emergente si es relevante**: IA, blockchain, AR/VR solo cuando aporten valor real
+11. **Think of the end user**: How does this improve their experience?
+12. **Avoid the generic**: "Add social login" isn't creative; "Gamified onboarding" is
+13. **Challenge the status quo**: Include ideas that rethink the current approach
+14. **Only mention emerging tech if relevant**: AI, blockchain, AR/VR only when they add real value
 
-### 🔧 Modo Resolución de Problemas:
+### Problem Solving Mode:
 
-15. **Diagnostica primero**: Analiza el código para entender la causa raíz
-16. **Ofrece soluciones progresivas**: Desde quick fixes hasta rediseños completos
-17. **Considera trade-offs**: Cada solución tiene pros y contras, menciónalos
-18. **Incluye herramientas específicas**: Menciona librerías, servicios, comandos concretos
-19. **Piensa en prevención**: Cómo evitar que el problema vuelva a ocurrir
-20. **Considera el contexto de producción**: Algunas soluciones requieren downtime, planifícalo
+15. **Diagnose first**: Analyze the code to understand the root cause
+16. **Offer progressive solutions**: From quick fixes to complete redesigns
+17. **Consider trade-offs**: Every solution has pros and cons, mention them
+18. **Include specific tools**: Mention concrete libraries, services, commands
+19. **Think about prevention**: How to prevent the problem from happening again
+20. **Consider production context**: Some solutions require downtime, plan for it

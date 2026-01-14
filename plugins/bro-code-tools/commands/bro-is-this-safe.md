@@ -1,121 +1,121 @@
 ---
 name: bro-is-this-safe
-description: Escanea el código en busca de vulnerabilidades de seguridad - genera informe detallado sin modificar archivos. Soporta múltiples lenguajes. Solo lectura.
+description: Scans code for security vulnerabilities - generates detailed report without modifying files. Multi-language support. Read-only.
 model: opus
 allowed-tools: ["Bash(read-only)", "Read", "Grep", "Glob"]
 ---
 
-# Escaneo de Seguridad
+# Security Scan
 
-Analiza el código en busca de vulnerabilidades de seguridad. **Solo lectura, no modifica nada. Soporta múltiples lenguajes.**
+Analyze code for security vulnerabilities. **Read-only, doesn't modify anything. Multi-language support.**
 
-## Entrada del Usuario
+## User Input
 
-El usuario puede especificar qué escanear de varias formas:
+The user can specify what to scan in various ways:
 
-**Ruta exacta:**
+**Exact path:**
 - `/bro-is-this-safe src/api/`
 - `/bro-is-this-safe src/auth/authService.ts`
 - `/bro-is-this-safe app/auth/`
 
-**Lenguaje natural (ejemplos ilustrativos):**
-- `/bro-is-this-safe escanea el módulo de <área>`
-- `/bro-is-this-safe revisa seguridad en <funcionalidad>`
-- `/bro-is-this-safe analiza vulnerabilidades en los servicios de <tema>`
-- `/bro-is-this-safe busca secrets en <módulo>`
+**Natural language (illustrative examples):**
+- `/bro-is-this-safe scan the <area> module`
+- `/bro-is-this-safe check security in <feature>`
+- `/bro-is-this-safe analyze vulnerabilities in <topic> services`
+- `/bro-is-this-safe look for secrets in <module>`
 
-**Sin argumentos:**
-- `/bro-is-this-safe` → escanea todo el proyecto
+**No arguments:**
+- `/bro-is-this-safe` → scans the entire project
 
-> **Nota:** Los términos como "autenticación", "pagos", "API" son solo ejemplos. Interpreta lo que el usuario solicite y busca los archivos correspondientes en el proyecto.
+> **Note:** Terms like "authentication", "payments", "API" are just examples. Interpret what the user requests and search for the corresponding files in the project.
 
 ---
 
-## Paso 1: Interpretar la Solicitud
+## Step 1: Interpret the Request
 
-### Si es ruta exacta:
-Usar directamente.
+### If it's an exact path:
+Use directly.
 
-### Si es lenguaje natural:
-Buscar archivos que coincidan con la descripción:
+### If it's natural language:
+Search for files matching the description:
 
 ```bash
-# Explorar estructura del proyecto (incluye archivos de config)
+# Explore project structure (includes config files)
 find . -type f \( -name "*.ts" -o -name "*.tsx" -o -name "*.js" -o -name "*.jsx" -o -name "*.py" -o -name "*.go" -o -name "*.rs" -o -name "*.php" -o -name "*.rb" -o -name "*.java" -o -name "*.env*" -o -name "*.yml" -o -name "*.yaml" -o -name "Dockerfile*" \) \
   ! -path "*/node_modules/*" ! -path "*/vendor/*" ! -path "*/target/*" ! -path "*/.git/*" ! -path "*/dist/*"
 
-# Buscar por nombre relacionado
-find . -type f -iname "*<término>*" | grep -v node_modules
-find . -type d -iname "*<término>*" | grep -v node_modules
+# Search by related name
+find . -type f -iname "*<term>*" | grep -v node_modules
+find . -type d -iname "*<term>*" | grep -v node_modules
 
-# Buscar contenido relacionado
-grep -ril "<término>" --include="*.ts" --include="*.tsx" --include="*.js" --include="*.py" --include="*.go" | grep -v node_modules | head -30
+# Search related content
+grep -ril "<term>" --include="*.ts" --include="*.tsx" --include="*.js" --include="*.py" --include="*.go" | grep -v node_modules | head -30
 ```
 
-**Confirma con el usuario** si encuentras múltiples coincidencias.
+**Confirm with the user** if you find multiple matches.
 
-**Límite:** Máximo 100 archivos. Si hay más, pide acotar o prioriza por riesgo (auth, api, config primero).
+**Limit:** Maximum 100 files. If there are more, ask to narrow down or prioritize by risk (auth, api, config first).
 
 ---
 
-## Paso 2: Contexto del Proyecto
+## Step 2: Project Context
 
-Busca y lee archivos de configuración y estándares:
+Search and read configuration and standards files:
 
 ```bash
-# Estándares y guías del proyecto
+# Project standards and guides
 cat CLAUDE.md 2>/dev/null
 cat AGENTS.md 2>/dev/null
 cat .cursor/rules.md 2>/dev/null
 
-# Configuración de seguridad
+# Security configuration
 cat .env.example 2>/dev/null
 cat .gitignore 2>/dev/null
 
-# Detectar stack
+# Detect stack
 cat package.json pyproject.toml go.mod Cargo.toml composer.json 2>/dev/null
 cat docker-compose.yml 2>/dev/null
 ```
 
-Usa esta información para entender la arquitectura y configuración de seguridad del proyecto.
+Use this information to understand the project's architecture and security configuration.
 
 ---
 
-## Paso 3: Leer y Analizar
+## Step 3: Read and Analyze
 
 ```bash
-cat [archivo]
-wc -l [archivo]
+cat [file]
+wc -l [file]
 ```
 
-Lee cada archivo y realiza el análisis de seguridad completo.
+Read each file and perform the complete security analysis.
 
 ---
 
-## Paso 4: Análisis OWASP Top 10
+## Step 4: OWASP Top 10 Analysis
 
 ### A01: Broken Access Control
-- Endpoints sin verificación de permisos
-- Acceso directo a objetos (IDOR)
-- Elevación de privilegios
-- Bypass de controles de acceso
+- Endpoints without permission verification
+- Direct object access (IDOR)
+- Privilege escalation
+- Access control bypass
 
 ### A02: Cryptographic Failures
-- Datos sensibles sin encriptar
-- Algoritmos débiles (MD5, SHA1, DES)
-- Keys hardcodeadas
-- Certificados autofirmados en producción
+- Sensitive data unencrypted
+- Weak algorithms (MD5, SHA1, DES)
+- Hardcoded keys
+- Self-signed certificates in production
 
 ### A03: Injection
 
-#### SQL Injection por lenguaje:
+#### SQL Injection by language:
 
 **JavaScript/TypeScript:**
 ```javascript
 // ❌ Vulnerable
 `SELECT * FROM users WHERE id = ${id}`
 db.query(`SELECT * FROM users WHERE email = '${email}'`)
-// ✅ Seguro
+// ✅ Safe
 db.query('SELECT * FROM users WHERE id = ?', [id])
 ```
 
@@ -124,7 +124,7 @@ db.query('SELECT * FROM users WHERE id = ?', [id])
 # ❌ Vulnerable
 f"SELECT * FROM users WHERE id = {user_id}"
 cursor.execute(f"SELECT * FROM users WHERE email = '{email}'")
-# ✅ Seguro
+# ✅ Safe
 cursor.execute("SELECT * FROM users WHERE id = %s", (user_id,))
 ```
 
@@ -132,7 +132,7 @@ cursor.execute("SELECT * FROM users WHERE id = %s", (user_id,))
 ```go
 // ❌ Vulnerable
 fmt.Sprintf("SELECT * FROM users WHERE id = %s", id)
-// ✅ Seguro
+// ✅ Safe
 db.Query("SELECT * FROM users WHERE id = $1", id)
 ```
 
@@ -140,7 +140,7 @@ db.Query("SELECT * FROM users WHERE id = $1", id)
 ```php
 // ❌ Vulnerable
 "SELECT * FROM users WHERE id = " . $id
-// ✅ Seguro
+// ✅ Safe
 $stmt = $pdo->prepare("SELECT * FROM users WHERE id = ?");
 ```
 
@@ -148,14 +148,14 @@ $stmt = $pdo->prepare("SELECT * FROM users WHERE id = ?");
 ```ruby
 # ❌ Vulnerable
 "SELECT * FROM users WHERE id = #{id}"
-# ✅ Seguro
+# ✅ Safe
 User.where(id: id)
 ```
 
 #### Command Injection:
 
-| Lenguaje | ❌ Vulnerable | ✅ Seguro |
-|----------|--------------|----------|
+| Language | ❌ Vulnerable | ✅ Safe |
+|----------|--------------|---------|
 | JS | `exec(cmd)` | `execFile(cmd, args)` |
 | Python | `os.system(f"ping {h}")` | `subprocess.run(['ping', h])` |
 | Go | `exec.Command("sh", "-c", input)` | `exec.Command("ping", host)` |
@@ -164,65 +164,65 @@ User.where(id: id)
 
 #### XSS:
 
-| Lenguaje | ❌ Vulnerable |
+| Language | ❌ Vulnerable |
 |----------|--------------|
 | JS/React | `dangerouslySetInnerHTML`, `innerHTML` |
-| PHP | `echo $input` sin escape |
-| Ruby/Rails | `raw()`, `html_safe` mal usado |
-| Go/templ | `template.HTML()` con input |
+| PHP | `echo $input` without escaping |
+| Ruby/Rails | `raw()`, `html_safe` misused |
+| Go/templ | `template.HTML()` with input |
 
 #### Code Injection:
 
-| Lenguaje | ❌ Evitar |
+| Language | ❌ Avoid |
 |----------|----------|
 | JS | `eval()`, `Function()`, `setTimeout(string)` |
 | Python | `eval()`, `exec()`, `pickle.loads()` |
 | PHP | `eval()`, `create_function()`, `preg_replace /e` |
-| Ruby | `eval()`, `instance_eval` con input |
+| Ruby | `eval()`, `instance_eval` with input |
 
 ### A04: Insecure Design
-- Falta de rate limiting
-- Sin validación de negocio
-- Flujos de autenticación débiles
+- Missing rate limiting
+- No business validation
+- Weak authentication flows
 
 ### A05: Security Misconfiguration
-- Debug habilitado en producción
-- Headers de seguridad faltantes
-- CORS demasiado permisivo: `Access-Control-Allow-Origin: *`
-- Permisos excesivos
-- Configuraciones por defecto
+- Debug enabled in production
+- Missing security headers
+- Overly permissive CORS: `Access-Control-Allow-Origin: *`
+- Excessive permissions
+- Default configurations
 
 ### A06: Vulnerable Components
-- Dependencias con CVEs conocidos
-- Paquetes desactualizados
-- Librerías abandonadas
+- Dependencies with known CVEs
+- Outdated packages
+- Abandoned libraries
 
 ### A07: Authentication Failures
-- Contraseñas débiles permitidas
-- Sin protección contra brute force
-- Tokens predecibles
-- Sesiones que no expiran
-- JWT secrets débiles
+- Weak passwords allowed
+- No brute force protection
+- Predictable tokens
+- Sessions that don't expire
+- Weak JWT secrets
 
 ### A08: Data Integrity Failures
-- Deserialización insegura
-- Sin verificación de integridad
-- Updates automáticos sin firma
+- Insecure deserialization
+- No integrity verification
+- Automatic updates without signing
 
 ### A09: Logging Failures
-- Datos sensibles en logs
-- Sin logging de eventos críticos
-- Logs accesibles públicamente
+- Sensitive data in logs
+- No logging of critical events
+- Publicly accessible logs
 
 ### A10: SSRF
-- URLs controladas por usuario sin validar
-- Requests internos manipulables
+- User-controlled URLs without validation
+- Manipulable internal requests
 
 ---
 
-## Paso 5: Credenciales y Secrets
+## Step 5: Credentials and Secrets
 
-### Patrones a detectar:
+### Patterns to detect:
 ```regex
 password\s*=\s*["'][^"']+["']
 api[_-]?key\s*=\s*["'][^"']+["']
@@ -233,7 +233,7 @@ PRIVATE[_-]?KEY
 -----BEGIN.*PRIVATE KEY-----
 ```
 
-### Ejemplos por lenguaje:
+### Examples by language:
 
 **JavaScript/TypeScript:**
 ```javascript
@@ -258,9 +258,9 @@ var dbPassword = "secret"
 
 ---
 
-## Paso 6: Archivos Sensibles
+## Step 6: Sensitive Files
 
-Verificar que `.gitignore` incluye:
+Verify that `.gitignore` includes:
 - `.env`, `.env.*`
 - `*.pem`, `*.key`
 - `*credentials*`
@@ -268,7 +268,7 @@ Verificar que `.gitignore` incluye:
 
 ---
 
-## Paso 7: Dependencias
+## Step 7: Dependencies
 
 ```bash
 # JavaScript
@@ -285,179 +285,179 @@ cat composer.json
 cat Gemfile
 ```
 
-Identificar dependencias potencialmente vulnerables o muy desactualizadas.
+Identify potentially vulnerable or very outdated dependencies.
 
 ---
 
-## Paso 8: Generar Informe
+## Step 8: Generate Report
 
-**Responde directamente en el chat:**
+**Respond directly in the chat:**
 
 ```markdown
-# 🔒 INFORME DE SEGURIDAD BRO
+# BRO SECURITY REPORT
 
-**Fecha:** [fecha actual]
-**Alcance:** `[ruta, descripción o "proyecto completo"]`
-**Lenguaje(s):** [detectados]
-**Archivos analizados:** [número]
-**Vulnerabilidades encontradas:** [número]
-
----
-
-## Resumen Ejecutivo
-
-| Severidad | Cantidad | Acción Requerida |
-|-----------|----------|------------------|
-| 🔴 Crítica | X | Inmediata (24-48h) |
-| 🟠 Alta | X | Esta semana |
-| 🟡 Media | X | Este mes |
-| 🔵 Baja | X | Backlog |
-| ℹ️ Info | X | Considerar |
-
-**Riesgo general del proyecto:** [🔴 Crítico | 🟠 Alto | 🟡 Medio | 🟢 Bajo]
+**Date:** [current date]
+**Scope:** `[path, description or "entire project"]`
+**Language(s):** [detected]
+**Files analyzed:** [number]
+**Vulnerabilities found:** [number]
 
 ---
 
-## 🔴 Vulnerabilidades Críticas
+## Executive Summary
 
-### VULN-001: [Título descriptivo]
+| Severity | Count | Required Action |
+|----------|-------|-----------------|
+| Critical | X | Immediate (24-48h) |
+| High | X | This week |
+| Medium | X | This month |
+| Low | X | Backlog |
+| Info | X | Consider |
 
-**Categoría:** [OWASP A0X | Secrets | Injection | etc.]
-**Severidad:** 🔴 Crítica
-**CVSS Score:** [si aplica]
+**Overall project risk:** [Critical | High | Medium | Low]
 
-**Ubicación:**
-- Archivo: `path/to/file.ts`
-- Línea(s): XX-XX
+---
 
-**Código vulnerable:**
+## Critical Vulnerabilities
+
+### VULN-001: [Descriptive title]
+
+**Category:** [OWASP A0X | Secrets | Injection | etc.]
+**Severity:** Critical
+**CVSS Score:** [if applicable]
+
+**Location:**
+- File: `path/to/file.ts`
+- Line(s): XX-XX
+
+**Vulnerable code:**
 ```[lang]
-[fragmento problemático]
+[problematic snippet]
 ```
 
-**Descripción:**
-[Explicación de qué está mal y por qué es peligroso]
+**Description:**
+[Explanation of what's wrong and why it's dangerous]
 
-**Impacto:**
-[Qué podría hacer un atacante explotando esta vulnerabilidad]
+**Impact:**
+[What an attacker could do by exploiting this vulnerability]
 
-**Prueba de concepto:**
+**Proof of concept:**
 ```
-[Cómo se podría explotar - sin ser malicioso]
+[How it could be exploited - without being malicious]
 ```
 
-**Remediación:**
+**Remediation:**
 ```[lang]
-[código corregido]
+[corrected code]
 ```
 
-**Referencias:**
-- [OWASP - Nombre](https://owasp.org/...)
+**References:**
+- [OWASP - Name](https://owasp.org/...)
 - [CWE-XXX](https://cwe.mitre.org/...)
 
 ---
 
-[Repetir para cada vulnerabilidad, agrupadas por severidad]
+[Repeat for each vulnerability, grouped by severity]
 
 ---
 
-## 🟠 Vulnerabilidades Altas
+## High Vulnerabilities
 
 ### VULN-002: ...
 
 ---
 
-## 🟡 Vulnerabilidades Medias
+## Medium Vulnerabilities
 
 ### VULN-003: ...
 
 ---
 
-## 🔵 Vulnerabilidades Bajas
+## Low Vulnerabilities
 
 ### VULN-004: ...
 
 ---
 
-## ℹ️ Información y Recomendaciones
+## Information and Recommendations
 
-### INFO-001: [Recomendación]
+### INFO-001: [Recommendation]
 
-**Descripción:** [Sugerencia que mejoraría la postura de seguridad]
-
----
-
-## 📦 Análisis de Dependencias
-
-| Paquete | Versión Actual | Vulnerabilidades | Acción |
-|---------|----------------|------------------|--------|
-| [nombre] | X.X.X | X CVEs conocidos | Actualizar a X.X.X+ |
+**Description:** [Suggestion that would improve security posture]
 
 ---
 
-## ✅ Checklist de Seguridad
+## Dependency Analysis
 
-### Autenticación
-- [ ] Passwords hasheados con bcrypt/argon2
-- [ ] Rate limiting en login
-- [ ] MFA disponible
-- [ ] Tokens con expiración
-
-### Autorización
-- [ ] RBAC implementado
-- [ ] Verificación en cada endpoint
-- [ ] Principio de menor privilegio
-
-### Datos
-- [ ] Datos sensibles encriptados
-- [ ] PII protegida
-- [ ] Backups encriptados
-
-### Infraestructura
-- [ ] HTTPS forzado
-- [ ] Headers de seguridad
-- [ ] CORS configurado correctamente
+| Package | Current Version | Vulnerabilities | Action |
+|---------|-----------------|-----------------|--------|
+| [name] | X.X.X | X known CVEs | Update to X.X.X+ |
 
 ---
 
-## 📋 Plan de Remediación
+## Security Checklist
 
-### 🔴 Inmediato (24-48h)
-1. [Vulnerabilidad crítica] — Archivo: X
-2. [Vulnerabilidad crítica] — Archivo: Y
+### Authentication
+- [ ] Passwords hashed with bcrypt/argon2
+- [ ] Rate limiting on login
+- [ ] MFA available
+- [ ] Tokens with expiration
 
-### 🟠 Esta semana
-1. [Vulnerabilidad alta] — Archivo: X
-2. [Vulnerabilidad alta] — Archivo: Y
+### Authorization
+- [ ] RBAC implemented
+- [ ] Verification on each endpoint
+- [ ] Principle of least privilege
 
-### 🟡 Este mes
-1. [Vulnerabilidad media] — Archivo: X
+### Data
+- [ ] Sensitive data encrypted
+- [ ] PII protected
+- [ ] Encrypted backups
 
-### 🔵 Backlog
-1. [Mejora de seguridad]
+### Infrastructure
+- [ ] HTTPS enforced
+- [ ] Security headers
+- [ ] CORS configured correctly
 
 ---
 
-## ✨ Buenas Prácticas de Seguridad Encontradas
+## Remediation Plan
 
-[Patrones positivos identificados: uso correcto de prepared statements, hashing apropiado, validación de inputs, headers configurados, etc.]
+### Immediate (24-48h)
+1. [Critical vulnerability] — File: X
+2. [Critical vulnerability] — File: Y
+
+### This week
+1. [High vulnerability] — File: X
+2. [High vulnerability] — File: Y
+
+### This month
+1. [Medium vulnerability] — File: X
+
+### Backlog
+1. [Security improvement]
+
+---
+
+## Good Security Practices Found
+
+[Positive patterns identified: correct use of prepared statements, appropriate hashing, input validation, configured headers, etc.]
 ```
 
 ---
 
-## Reglas de Operación
+## Operating Rules
 
-1. **Solo lectura**: No modificar ningún archivo, solo analizar y reportar
-2. **No ejecutes exploits**: Solo identifica vulnerabilidades, no las explotes
-3. **Detecta el lenguaje**: Adapta patrones de vulnerabilidad al lenguaje del proyecto
-4. **Interpreta inteligentemente**: Buscar archivos relacionados con lo que pida el usuario
-5. **Confirma si hay ambigüedad**: Si hay múltiples coincidencias, pregunta
-6. **Sé exhaustivo**: Revisa todos los archivos del alcance
-7. **Prioriza correctamente**: Críticas primero, siempre
-8. **Incluye remediación**: Cada vulnerabilidad debe tener su solución con código corregido
-9. **Sé específico**: Archivos, líneas y código exacto
-10. **Evita falsos positivos**: No alarmes innecesariamente
-11. **Considera el contexto**: Código de desarrollo vs producción
-12. **Respeta estándares del proyecto**: Usa CLAUDE.md/AGENTS.md como referencia
-13. **Reconoce lo bueno**: Menciona prácticas de seguridad bien implementadas
-14. **Referencias**: Incluye OWASP, CWE cuando aplique
+1. **Read-only**: Don't modify any files, only analyze and report
+2. **Don't execute exploits**: Only identify vulnerabilities, don't exploit them
+3. **Detect the language**: Adapt vulnerability patterns to the project's language
+4. **Interpret intelligently**: Search for files related to what the user requests
+5. **Confirm if ambiguous**: If there are multiple matches, ask
+6. **Be exhaustive**: Review all files in scope
+7. **Prioritize correctly**: Critical first, always
+8. **Include remediation**: Each vulnerability must have its solution with corrected code
+9. **Be specific**: Exact files, lines and code
+10. **Avoid false positives**: Don't alarm unnecessarily
+11. **Consider context**: Development code vs production
+12. **Respect project standards**: Use CLAUDE.md/AGENTS.md as reference
+13. **Recognize the good**: Mention well-implemented security practices
+14. **References**: Include OWASP, CWE when applicable

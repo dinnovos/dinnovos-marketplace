@@ -1,51 +1,51 @@
 ---
 name: bro-explain-this
-description: Explica la arquitectura, estructura y flujos de un proyecto o módulo. Ideal para onboarding o entender código nuevo. Soporta múltiples lenguajes. Solo lectura.
+description: Explains the architecture, structure and flows of a project or module. Ideal for onboarding or understanding new code. Multi-language support. Read-only.
 model: opus
 allowed-tools: ["Bash(read-only)", "Read", "Grep", "Glob"]
 ---
 
-# Explicación de Codebase
+# Codebase Explanation
 
-Analiza y explica la arquitectura, estructura y flujos de un proyecto o módulo. **Solo lectura, no modifica nada. Soporta múltiples lenguajes.**
+Analyze and explain the architecture, structure and flows of a project or module. **Read-only, doesn't modify anything. Multi-language support.**
 
-## Entrada del Usuario
+## User Input
 
-El usuario puede especificar qué explicar de varias formas:
+The user can specify what to explain in various ways:
 
-**Ruta exacta:**
+**Exact path:**
 - `/bro-explain-this src/`
 - `/bro-explain-this src/modules/payments/`
 - `/bro-explain-this app/`
 
-**Lenguaje natural (ejemplos ilustrativos):**
-- `/bro-explain-this explica el proyecto`
-- `/bro-explain-this cómo funciona el módulo de <área>`
-- `/bro-explain-this explica la arquitectura de <funcionalidad>`
-- `/bro-explain-this qué hace el servicio de <tema>`
-- `/bro-explain-this cómo se conectan los componentes de <módulo>`
+**Natural language (illustrative examples):**
+- `/bro-explain-this explain the project`
+- `/bro-explain-this how does the <area> module work`
+- `/bro-explain-this explain the architecture of <feature>`
+- `/bro-explain-this what does the <topic> service do`
+- `/bro-explain-this how do the <module> components connect`
 
-**Sin argumentos:**
-- `/bro-explain-this` → explica todo el proyecto
+**No arguments:**
+- `/bro-explain-this` → explains the entire project
 
-> **Nota:** Los términos como "autenticación", "pagos", "usuarios" son solo ejemplos. Interpreta lo que el usuario solicite y busca los archivos correspondientes en el proyecto.
+> **Note:** Terms like "authentication", "payments", "users" are just examples. Interpret what the user requests and search for the corresponding files in the project.
 
 ---
 
-## Paso 1: Detectar Lenguaje y Stack
+## Step 1: Detect Language and Stack
 
 ```bash
-# Estructura general
+# General structure
 find . -type d -maxdepth 3 | grep -v node_modules | grep -v vendor | grep -v target | grep -v __pycache__ | sort
 
-# Detectar stack
+# Detect stack
 ls -la
 ```
 
-### Detección por archivos:
+### Detection by files:
 
-| Archivo | Stack |
-|---------|-------|
+| File | Stack |
+|------|-------|
 | `package.json` | Node.js / JavaScript / TypeScript |
 | `tsconfig.json` | TypeScript |
 | `pyproject.toml` / `requirements.txt` | Python |
@@ -56,10 +56,10 @@ ls -la
 | `pom.xml` / `build.gradle` | Java |
 | `*.csproj` | C# / .NET |
 
-### Frameworks comunes:
+### Common frameworks:
 
-| Lenguaje | Archivos indicadores | Framework |
-|----------|---------------------|-----------|
+| Language | Indicator Files | Framework |
+|----------|-----------------|-----------|
 | JS/TS | `next.config.js` | Next.js |
 | JS/TS | `vite.config.ts` | Vite |
 | JS/TS | `angular.json` | Angular |
@@ -73,7 +73,7 @@ ls -la
 
 ---
 
-## Paso 2: Leer Documentación
+## Step 2: Read Documentation
 
 ```bash
 cat README.md 2>/dev/null
@@ -85,9 +85,9 @@ cat docs/*.md 2>/dev/null
 
 ---
 
-## Paso 3: Identificar Entry Points
+## Step 3: Identify Entry Points
 
-### Por lenguaje/framework:
+### By language/framework:
 
 | Stack | Entry Points |
 |-------|--------------|
@@ -105,7 +105,7 @@ cat docs/*.md 2>/dev/null
 | **C#/.NET** | `Program.cs`, `Startup.cs` |
 
 ```bash
-# Buscar entry points
+# Find entry points
 cat src/index.ts src/main.ts src/app.ts 2>/dev/null          # Node
 cat src/App.tsx pages/_app.tsx app/layout.tsx 2>/dev/null    # React/Next
 cat main.py app.py manage.py 2>/dev/null                      # Python
@@ -115,9 +115,9 @@ cat src/main.rs src/lib.rs 2>/dev/null                        # Rust
 
 ---
 
-## Paso 4: Mapear Estructura
+## Step 4: Map Structure
 
-### Patrones comunes por stack:
+### Common patterns by stack:
 
 #### JavaScript/TypeScript (Node/React):
 ```
@@ -141,7 +141,7 @@ app/
 ├── repositories/   # Data access
 └── utils/          # Helpers
 
-# Django específico
+# Django specific
 project/
 ├── apps/
 │   └── myapp/
@@ -205,22 +205,22 @@ config/
 
 ---
 
-## Paso 5: Identificar Patrones Arquitectónicos
+## Step 5: Identify Architectural Patterns
 
-| Patrón | Indicadores |
-|--------|-------------|
+| Pattern | Indicators |
+|---------|------------|
 | **MVC** | controllers/, models/, views/ |
 | **Clean Architecture** | domain/, usecases/, infrastructure/ |
 | **Hexagonal** | ports/, adapters/, core/ |
 | **DDD** | domain/, application/, infrastructure/ |
-| **Microservices** | services/, múltiples go.mod/package.json |
+| **Microservices** | services/, multiple go.mod/package.json |
 | **Monorepo** | packages/, apps/, libs/ |
 
 ---
 
-## Paso 6: Mapear Flujos de Datos
+## Step 6: Map Data Flows
 
-### Identificar:
+### Identify:
 - Routes/Endpoints
 - Controllers/Handlers
 - Services/Use Cases
@@ -230,74 +230,74 @@ config/
 
 ---
 
-## Paso 7: Generar Informe
+## Step 7: Generate Report
 
-**Responde directamente en el chat:**
+**Respond directly in the chat:**
 
 ```markdown
-# 🗺️ EXPLICACIÓN DE CODEBASE BRO
+# BRO CODEBASE EXPLANATION
 
-**Fecha:** [fecha actual]
-**Alcance:** `[ruta, descripción o "proyecto completo"]`
-**Archivos analizados:** [número]
-**Líneas de código:** ~[número estimado]
-
----
-
-## 📋 Resumen Ejecutivo
-
-**Tipo de proyecto:** [Web App | API | CLI | Library | Monorepo | etc.]
-**Stack tecnológico:** [TypeScript + React + Node | Python + FastAPI | Go + Chi | etc.]
-**Patrón arquitectónico:** [MVC | Clean Architecture | Hexagonal | etc.]
-**Estado general:** [Bien estructurado | Necesita refactor | Legacy | etc.]
-
-### En una oración:
-[Descripción breve de qué hace el proyecto y cómo está organizado]
+**Date:** [current date]
+**Scope:** `[path, description or "entire project"]`
+**Files analyzed:** [number]
+**Lines of code:** ~[estimated number]
 
 ---
 
-## 🏗️ Arquitectura General
+## Executive Summary
 
-### Estructura de Carpetas
+**Project type:** [Web App | API | CLI | Library | Monorepo | etc.]
+**Tech stack:** [TypeScript + React + Node | Python + FastAPI | Go + Chi | etc.]
+**Architectural pattern:** [MVC | Clean Architecture | Hexagonal | etc.]
+**Overall state:** [Well structured | Needs refactor | Legacy | etc.]
+
+### In one sentence:
+[Brief description of what the project does and how it's organized]
+
+---
+
+## General Architecture
+
+### Folder Structure
 ```
-proyecto/
+project/
 ├── src/
-│   ├── [carpeta]/     # [Propósito]
-│   ├── [carpeta]/     # [Propósito]
-│   └── [carpeta]/     # [Propósito]
-├── [archivo]          # [Propósito]
-└── [archivo]          # [Propósito]
+│   ├── [folder]/     # [Purpose]
+│   ├── [folder]/     # [Purpose]
+│   └── [folder]/     # [Purpose]
+├── [file]            # [Purpose]
+└── [file]            # [Purpose]
 ```
 
-### Patrón Arquitectónico
-[Explicación del patrón usado y cómo se implementa]
+### Architectural Pattern
+[Explanation of the pattern used and how it's implemented]
 
-### Capas Identificadas
-| Capa | Ubicación | Responsabilidad |
-|------|-----------|-----------------|
-| [Presentación] | `src/components/` | [descripción] |
-| [Negocio] | `src/services/` | [descripción] |
-| [Datos] | `src/repositories/` | [descripción] |
+### Identified Layers
+| Layer | Location | Responsibility |
+|-------|----------|----------------|
+| [Presentation] | `src/components/` | [description] |
+| [Business] | `src/services/` | [description] |
+| [Data] | `src/repositories/` | [description] |
 
 ---
 
-## 🚪 Entry Points
+## Entry Points
 
-### Entry Point Principal
-- **Archivo:** `[ruta]`
-- **Función:** [qué hace]
+### Main Entry Point
+- **File:** `[path]`
+- **Function:** [what it does]
 
-### Inicialización
+### Initialization
 ```[lang]
-// Flujo de inicialización resumido
-[fragmento clave]
+// Summarized initialization flow
+[key snippet]
 ```
 
 ---
 
-## 🔀 Flujos Principales
+## Main Flows
 
-### Flujo 1: [Nombre del flujo - ej: Autenticación de Usuario]
+### Flow 1: [Flow name - e.g.: User Authentication]
 
 ```
 [Request] → [Handler] → [Service] → [Repository] → [DB]
@@ -305,29 +305,29 @@ proyecto/
            [Response]
 ```
 
-**Archivos involucrados:**
-1. `src/[archivo1].ts` → [qué hace]
-2. `src/[archivo2].ts` → [qué hace]
-3. `src/[archivo3].ts` → [qué hace]
+**Files involved:**
+1. `src/[file1].ts` → [what it does]
+2. `src/[file2].ts` → [what it does]
+3. `src/[file3].ts` → [what it does]
 
-**Descripción:**
-[Explicación paso a paso del flujo]
-
----
-
-### Flujo 2: [Nombre del flujo]
-[Repetir estructura]
+**Description:**
+[Step by step explanation of the flow]
 
 ---
 
-## 📦 Módulos Principales
+### Flow 2: [Flow name]
+[Repeat structure]
 
-| Módulo | Ubicación | Responsabilidad | Depende de |
-|--------|-----------|-----------------|------------|
-| [Auth] | `src/auth/` | [descripción] | [Database, Utils] |
-| [Users] | `src/users/` | [descripción] | [Auth, Database] |
+---
 
-### Diagrama de Dependencias
+## Main Modules
+
+| Module | Location | Responsibility | Depends on |
+|--------|----------|----------------|------------|
+| [Auth] | `src/auth/` | [description] | [Database, Utils] |
+| [Users] | `src/users/` | [description] | [Auth, Database] |
+
+### Dependency Diagram
 ```
 ┌─────────┐     ┌─────────┐
 │  Auth   │────▶│  Users  │
@@ -341,18 +341,18 @@ proyecto/
 
 ---
 
-## 💾 Capa de Datos
+## Data Layer
 
-**Base de datos:** [PostgreSQL | MongoDB | etc.]
+**Database:** [PostgreSQL | MongoDB | etc.]
 **ORM/Query Builder:** [Prisma | TypeORM | Mongoose | GORM | SQLAlchemy | etc.]
 
-### Modelos Principales
-| Modelo | Archivo | Campos Clave |
-|--------|---------|--------------|
+### Main Models
+| Model | File | Key Fields |
+|-------|------|------------|
 | [User] | `src/models/user.ts` | id, email, password, role |
 | [Order] | `src/models/order.ts` | id, userId, items, total |
 
-### Relaciones
+### Relationships
 ```
 User (1) ←──────→ (N) Order
 Order (1) ←──────→ (N) OrderItem
@@ -360,101 +360,101 @@ Order (1) ←──────→ (N) OrderItem
 
 ---
 
-## 🎨 Capa de Presentación (si aplica)
+## Presentation Layer (if applicable)
 
 **Framework:** [React | Vue | Angular | etc.]
-**Manejo de estado:** [Redux | Zustand | Context | etc.]
+**State management:** [Redux | Zustand | Context | etc.]
 **Routing:** [React Router | Next.js | etc.]
 
-### Componentes Principales
-| Componente | Ubicación | Propósito |
-|------------|-----------|-----------|
-| [Layout] | `src/components/Layout/` | [descripción] |
-| [Dashboard] | `src/pages/Dashboard/` | [descripción] |
+### Main Components
+| Component | Location | Purpose |
+|-----------|----------|---------|
+| [Layout] | `src/components/Layout/` | [description] |
+| [Dashboard] | `src/pages/Dashboard/` | [description] |
 
 ---
 
-## 🔌 Integraciones Externas
+## External Integrations
 
-| Servicio | Propósito | Archivos |
-|----------|-----------|----------|
-| [Stripe] | Pagos | `src/services/stripe.ts` |
+| Service | Purpose | Files |
+|---------|---------|-------|
+| [Stripe] | Payments | `src/services/stripe.ts` |
 | [SendGrid] | Emails | `src/services/email.ts` |
 
 ---
 
-## ⚙️ Configuración
+## Configuration
 
-### Variables de Entorno
-| Variable | Propósito | Requerida |
-|----------|-----------|-----------|
-| `DATABASE_URL` | Conexión a BD | ✅ |
-| `JWT_SECRET` | Firma de tokens | ✅ |
-| `API_KEY` | API externa | ❌ |
+### Environment Variables
+| Variable | Purpose | Required |
+|----------|---------|----------|
+| `DATABASE_URL` | DB connection | Yes |
+| `JWT_SECRET` | Token signing | Yes |
+| `API_KEY` | External API | No |
 
-### Archivos de Configuración
-| Archivo | Propósito |
-|---------|-----------|
-| `tsconfig.json` | Configuración TypeScript |
-| `.env.example` | Template de variables |
-
----
-
-## 🧭 Cómo Navegar el Código
-
-### Para entender [funcionalidad X]:
-1. Empieza en `src/[archivo]`
-2. Sigue a `src/[archivo2]`
-3. La lógica principal está en `src/[archivo3]`
-
-### Para agregar [nueva feature]:
-1. Crear modelo en `src/models/`
-2. Crear servicio en `src/services/`
-3. Agregar ruta en `src/routes/`
-4. Conectar en `src/index.ts`
+### Configuration Files
+| File | Purpose |
+|------|---------|
+| `tsconfig.json` | TypeScript configuration |
+| `.env.example` | Variables template |
 
 ---
 
-## ⚠️ Puntos de Atención
+## How to Navigate the Code
 
-### Complejidad Alta
-- `src/[archivo].ts` — [razón de la complejidad]
+### To understand [feature X]:
+1. Start at `src/[file]`
+2. Follow to `src/[file2]`
+3. Main logic is in `src/[file3]`
 
-### Deuda Técnica Visible
-- [Descripción de deuda técnica identificada]
-
-### Áreas Sin Documentar
-- [Módulos o funciones que necesitan documentación]
-
----
-
-## ✨ Buenas Prácticas Identificadas
-
-[Patrones positivos encontrados: separación clara, naming consistente, tests bien organizados, etc.]
+### To add [new feature]:
+1. Create model in `src/models/`
+2. Create service in `src/services/`
+3. Add route in `src/routes/`
+4. Connect in `src/index.ts`
 
 ---
 
-## 📚 Recursos Adicionales
+## Points of Attention
 
-- README.md: [qué contiene]
-- CONTRIBUTING.md: [si existe]
-- /docs: [si existe]
+### High Complexity
+- `src/[file].ts` — [reason for complexity]
+
+### Visible Technical Debt
+- [Description of identified technical debt]
+
+### Undocumented Areas
+- [Modules or functions that need documentation]
+
+---
+
+## Good Practices Identified
+
+[Positive patterns found: clear separation, consistent naming, well-organized tests, etc.]
+
+---
+
+## Additional Resources
+
+- README.md: [what it contains]
+- CONTRIBUTING.md: [if exists]
+- /docs: [if exists]
 ```
 
 ---
 
-## Reglas de Operación
+## Operating Rules
 
-1. **Solo lectura**: No modificar ningún archivo, solo analizar y explicar
-2. **Detecta el stack**: Adapta explicación al lenguaje/framework del proyecto
-3. **Interpreta inteligentemente**: Buscar archivos relacionados con lo que pida el usuario
-4. **Confirma si hay ambigüedad**: Si no está claro qué explicar, pregunta
-5. **Sé didáctico**: Explica para alguien que no conoce el proyecto
-6. **Usa diagramas**: ASCII art para flujos y relaciones cuando ayude
-7. **Prioriza lo importante**: Flujos críticos primero, detalles después
-8. **Sé específico**: Menciona archivos y líneas concretas
-9. **Respeta estándares del proyecto**: Usa CLAUDE.md/AGENTS.md como referencia
-10. **Identifica patrones**: Nombra el patrón arquitectónico si lo reconoces
-11. **Señala complejidad**: Indica áreas difíciles de entender
-12. **Sugiere navegación**: Guía sobre por dónde empezar a leer
-13. **Reconoce lo bueno**: Menciona prácticas positivas encontradas
+1. **Read-only**: Don't modify any files, only analyze and explain
+2. **Detect the stack**: Adapt explanation to the project's language/framework
+3. **Interpret intelligently**: Search for files related to what the user requests
+4. **Confirm if ambiguous**: If it's unclear what to explain, ask
+5. **Be didactic**: Explain for someone who doesn't know the project
+6. **Use diagrams**: ASCII art for flows and relationships when helpful
+7. **Prioritize what's important**: Critical flows first, details later
+8. **Be specific**: Mention specific files and lines
+9. **Respect project standards**: Use CLAUDE.md/AGENTS.md as reference
+10. **Identify patterns**: Name the architectural pattern if recognized
+11. **Flag complexity**: Indicate areas that are hard to understand
+12. **Suggest navigation**: Guide on where to start reading
+13. **Recognize the good**: Mention positive practices found

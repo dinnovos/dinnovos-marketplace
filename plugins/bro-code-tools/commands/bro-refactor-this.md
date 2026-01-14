@@ -1,158 +1,158 @@
 ---
 name: bro-refactor-this
-description: Analiza código en busca de duplicaciones, lógica similar y oportunidades de refactorización. Soporta múltiples lenguajes. Solo lectura.
+description: Analyzes code for duplications, similar logic and refactoring opportunities. Multi-language support. Read-only.
 model: opus
 allowed-tools: ["Bash(read-only)", "Read", "Grep", "Glob"]
 ---
 
-# Análisis de Refactorización
+# Refactoring Analysis
 
-Analiza el código en busca de duplicaciones y oportunidades de refactorización. **Solo lectura, no modifica nada. Soporta múltiples lenguajes.**
+Analyze code for duplications and refactoring opportunities. **Read-only, doesn't modify anything. Multi-language support.**
 
-## Entrada del Usuario
+## User Input
 
-El usuario puede especificar qué analizar de varias formas:
+The user can specify what to analyze in various ways:
 
-**Ruta exacta:**
+**Exact path:**
 - `/bro-refactor-this src/components/`
 - `/bro-refactor-this src/services/userService.ts`
 - `/bro-refactor-this app/services/`
 
-**Lenguaje natural (ejemplos ilustrativos):**
-- `/bro-refactor-this analiza los componentes de <área>`
-- `/bro-refactor-this busca duplicados en <módulo>`
-- `/bro-refactor-this revisa oportunidades en los servicios de <funcionalidad>`
-- `/bro-refactor-this analiza todo lo relacionado con <tema>`
+**Natural language (illustrative examples):**
+- `/bro-refactor-this analyze the <area> components`
+- `/bro-refactor-this find duplicates in <module>`
+- `/bro-refactor-this review opportunities in <feature> services`
+- `/bro-refactor-this analyze everything related to <topic>`
 
-**Sin argumentos:**
-- `/bro-refactor-this` → analiza todo el proyecto
+**No arguments:**
+- `/bro-refactor-this` → analyzes the entire project
 
-> **Nota:** Los términos como "UI", "autenticación", "pagos" son solo ejemplos. Interpreta lo que el usuario solicite y busca los archivos correspondientes en el proyecto.
+> **Note:** Terms like "UI", "authentication", "payments" are just examples. Interpret what the user requests and search for the corresponding files in the project.
 
 ---
 
-## Paso 1: Interpretar la Solicitud
+## Step 1: Interpret the Request
 
-### Si es ruta exacta:
-Usar directamente.
+### If it's an exact path:
+Use directly.
 
-### Si es lenguaje natural:
-Buscar archivos que coincidan con la descripción:
+### If it's natural language:
+Search for files matching the description:
 
 ```bash
-# Explorar estructura del proyecto
+# Explore project structure
 find . -type f \( -name "*.ts" -o -name "*.tsx" -o -name "*.js" -o -name "*.jsx" -o -name "*.py" -o -name "*.go" -o -name "*.rs" -o -name "*.php" -o -name "*.rb" -o -name "*.java" -o -name "*.cs" \) \
   ! -path "*/node_modules/*" ! -path "*/vendor/*" ! -path "*/target/*" ! -path "*/__pycache__/*" ! -path "*/dist/*" ! -path "*/.git/*"
 
-# Buscar por nombre relacionado (reemplaza <término> con lo que pidió el usuario)
-find . -type f -iname "*<término>*" | grep -v node_modules
-find . -type d -iname "*<término>*" | grep -v node_modules
+# Search by related name (replace <term> with what the user requested)
+find . -type f -iname "*<term>*" | grep -v node_modules
+find . -type d -iname "*<term>*" | grep -v node_modules
 
-# Buscar contenido relacionado
-grep -ril "<término>" --include="*.ts" --include="*.tsx" --include="*.js" --include="*.py" --include="*.go" | grep -v node_modules | head -30
+# Search related content
+grep -ril "<term>" --include="*.ts" --include="*.tsx" --include="*.js" --include="*.py" --include="*.go" | grep -v node_modules | head -30
 ```
 
-**Confirma con el usuario** si encuentras múltiples coincidencias:
+**Confirm with the user** if you find multiple matches:
 ```
-Encontré estos archivos/carpetas relacionados con "<término>":
-1. src/components/[Carpeta1]/
-2. src/services/[Archivo1].ts
-3. src/hooks/[Archivo2].ts
+Found these files/folders related to "<term>":
+1. src/components/[Folder1]/
+2. src/services/[File1].ts
+3. src/hooks/[File2].ts
 
-¿Analizo todos o alguno específico?
+Should I analyze all of them or a specific one?
 ```
 
-Si solo hay una coincidencia clara, procede directamente.
+If there's only one clear match, proceed directly.
 
-**Límite:** Máximo 100 archivos. Si hay más, pide acotar o prioriza por tamaño.
+**Limit:** Maximum 100 files. If there are more, ask to narrow down or prioritize by size.
 
 ---
 
-## Paso 2: Contexto del Proyecto
+## Step 2: Project Context
 
-Busca y lee archivos de configuración y estándares:
+Search and read configuration and standards files:
 
 ```bash
-# Estándares y guías del proyecto
+# Project standards and guides
 cat CLAUDE.md 2>/dev/null
 cat AGENTS.md 2>/dev/null
 cat .cursor/rules.md 2>/dev/null
 
-# Detectar stack
+# Detect stack
 cat package.json pyproject.toml go.mod Cargo.toml composer.json Gemfile 2>/dev/null
 
-# Configuración de linting y tipos
+# Linting and types configuration
 cat .eslintrc* 2>/dev/null
 cat tsconfig.json 2>/dev/null
 cat biome.json 2>/dev/null
 ```
 
-Usa esta información para entender la estructura y convenciones del proyecto.
+Use this information to understand the project's structure and conventions.
 
 ---
 
-## Paso 3: Leer y Analizar
+## Step 3: Read and Analyze
 
 ```bash
-cat [archivo]
-wc -l [archivo]
+cat [file]
+wc -l [file]
 ```
 
-Lee cada archivo y realiza el análisis completo.
+Read each file and perform the complete analysis.
 
 ---
 
-## Paso 4: Categorías de Análisis
+## Step 4: Analysis Categories
 
-### 🔄 1. Código Duplicado
+### 1. Duplicate Code
 
-Bloques de código idénticos o casi idénticos (>5 líneas) en múltiples lugares.
+Identical or nearly identical code blocks (>5 lines) in multiple places.
 
-**Buscar:**
-- Funciones con mismo cuerpo
-- Bloques copy-paste
-- Lógica repetida con diferentes nombres
+**Look for:**
+- Functions with the same body
+- Copy-paste blocks
+- Repeated logic with different names
 
-#### Ejemplos por lenguaje:
+#### Examples by language:
 
 **JavaScript/TypeScript:**
 ```typescript
-// ❌ Duplicado en UserCard.tsx y AdminCard.tsx
+// ❌ Duplicated in UserCard.tsx and AdminCard.tsx
 const formatName = (user) => `${user.first} ${user.last}`
-// ✅ Extraer a utils/formatters.ts
+// ✅ Extract to utils/formatters.ts
 export const formatName = (user: User) => `${user.first} ${user.last}`
 ```
 
 **Python:**
 ```python
-# ❌ Duplicado en user_service.py y admin_service.py
+# ❌ Duplicated in user_service.py and admin_service.py
 def format_name(user):
     return f"{user.first} {user.last}"
-# ✅ Extraer a utils/formatters.py
+# ✅ Extract to utils/formatters.py
 ```
 
 **Go:**
 ```go
-// ❌ Duplicado en handlers/
+// ❌ Duplicated in handlers/
 func formatName(u User) string {
     return u.First + " " + u.Last
 }
-// ✅ Extraer a pkg/formatters/
+// ✅ Extract to pkg/formatters/
 ```
 
 ---
 
-### 🧩 2. Lógica Similar
+### 2. Similar Logic
 
-Funciones o bloques que hacen cosas parecidas con pequeñas variaciones.
+Functions or blocks that do similar things with small variations.
 
-**Buscar:**
-- Mismo patrón con diferentes datos
-- Validaciones similares
-- Transformaciones de datos análogas
-- Handlers con estructura repetida
+**Look for:**
+- Same pattern with different data
+- Similar validations
+- Analogous data transformations
+- Handlers with repeated structure
 
-#### Ejemplos por lenguaje:
+#### Examples by language:
 
 **JavaScript/TypeScript:**
 ```typescript
@@ -166,7 +166,7 @@ function validateAdmin(d) {
   if (!d.pass) return {error: 'Pass required'}
   if (!d.role) return {error: 'Role required'}
 }
-// ✅ Unificado
+// ✅ Unified
 function validate(data, fields) {
   for (const f of fields) {
     if (!data[f]) return {error: `${f} required`}
@@ -179,7 +179,7 @@ function validate(data, fields) {
 # ❌ Similar
 def get_user_by_email(email): return db.query(User).filter_by(email=email).first()
 def get_user_by_id(id): return db.query(User).filter_by(id=id).first()
-# ✅ Unificado
+# ✅ Unified
 def get_user_by(**kwargs): return db.query(User).filter_by(**kwargs).first()
 ```
 
@@ -194,59 +194,59 @@ func MakeGetHandler[T any](svc Service[T]) http.HandlerFunc { /*...*/ }
 
 ---
 
-### 📦 3. Funciones Repetidas
+### 3. Repeated Functions
 
-Funciones con el mismo propósito en diferentes archivos.
+Functions with the same purpose in different files.
 
-**Buscar:**
-- Utilidades duplicadas (formatDate, capitalize, slugify, etc.)
-- Helpers repetidos
-- Funciones de validación similares
+**Look for:**
+- Duplicated utilities (formatDate, capitalize, slugify, etc.)
+- Repeated helpers
+- Similar validation functions
 
-| Utilidad | Buscar en |
-|----------|-----------|
-| formatDate | Múltiples archivos |
+| Utility | Search in |
+|---------|-----------|
+| formatDate | Multiple files |
 | capitalize | utils/, helpers/ |
-| slugify | varios servicios |
-| validateEmail | formularios |
+| slugify | various services |
+| validateEmail | forms |
 
 ---
 
-### 🏗️ 4. Clases/Componentes Similares
+### 4. Similar Classes/Components
 
-Clases o componentes con estructura o comportamiento parecido.
+Classes or components with similar structure or behavior.
 
-#### Ejemplos por lenguaje:
+#### Examples by language:
 
 **React:**
 ```tsx
-// ❌ Componentes similares
+// ❌ Similar components
 const UserCard = ({user}) => <Card><Avatar/><Name/></Card>
 const AdminCard = ({admin}) => <Card><Avatar/><Name/><Badge/></Card>
-// ✅ Componente base
+// ✅ Base component
 const PersonCard = ({person, badge}) => <Card><Avatar/><Name/>{badge}</Card>
 ```
 
 **Python:**
 ```python
-# ❌ Repositorios duplicados
+# ❌ Duplicated repositories
 class UserRepo:
     def find_all(self): return db.query(User).all()
 class ProductRepo:
     def find_all(self): return db.query(Product).all()
-# ✅ Base genérica
+# ✅ Generic base
 class BaseRepo(Generic[T]):
     def find_all(self) -> List[T]: return db.query(self.model).all()
 ```
 
 **Go:**
 ```go
-// ❌ Services similares
+// ❌ Similar services
 type UserService struct { db *DB }
 func (s *UserService) GetAll() []User { /*...*/ }
 type ProductService struct { db *DB }
 func (s *ProductService) GetAll() []Product { /*...*/ }
-// ✅ Interface común
+// ✅ Common interface
 type Repository[T any] interface {
     GetAll() []T
 }
@@ -254,58 +254,58 @@ type Repository[T any] interface {
 
 ---
 
-### 🔢 5. Constantes y Magic Numbers
+### 5. Constants and Magic Numbers
 
-Valores hardcodeados repetidos.
+Repeated hardcoded values.
 
-**Buscar:**
-- Números mágicos repetidos (timeouts, límites, etc.)
-- Strings duplicados (URLs, mensajes, keys)
-- Configuraciones dispersas
+**Look for:**
+- Repeated magic numbers (timeouts, limits, etc.)
+- Duplicated strings (URLs, messages, keys)
+- Scattered configurations
 
-| Tipo | JS/TS | Python | Go | Rust |
+| Type | JS/TS | Python | Go | Rust |
 |------|-------|--------|-----|------|
 | URL | `const API = ''` | `API = ''` | `const API = ""` | `const API: &str` |
 | Timeout | `TIMEOUT = 30000` | `TIMEOUT = 30` | `Timeout = 30*time.Second` | `TIMEOUT: u64 = 30` |
 
 ---
 
-### 📝 6. Inconsistencias de Naming
+### 6. Naming Inconsistencies
 
-Variables que representan lo mismo con nombres diferentes.
+Variables representing the same thing with different names.
 
-**Buscar:**
-- `user` vs `currentUser` vs `loggedUser` para lo mismo
+**Look for:**
+- `user` vs `currentUser` vs `loggedUser` for the same thing
 - `isLoading` vs `loading` vs `isLoad`
-- Inconsistencias en convenciones (camelCase vs snake_case)
+- Inconsistencies in conventions (camelCase vs snake_case)
 
-| Aspecto | JS/TS | Python | Go | Rust |
-|---------|-------|--------|-----|------|
+| Aspect | JS/TS | Python | Go | Rust |
+|--------|-------|--------|-----|------|
 | Variables | camelCase | snake_case | camelCase | snake_case |
-| Funciones | camelCase | snake_case | PascalCase | snake_case |
-| Constantes | UPPER_SNAKE | UPPER_SNAKE | PascalCase | UPPER_SNAKE |
+| Functions | camelCase | snake_case | PascalCase | snake_case |
+| Constants | UPPER_SNAKE | UPPER_SNAKE | PascalCase | UPPER_SNAKE |
 
 ---
 
-### 🎯 7. Patrones Repetidos
+### 7. Repeated Patterns
 
-Estructuras de código que se repiten con el mismo propósito.
+Code structures that repeat with the same purpose.
 
-#### Ejemplos por lenguaje:
+#### Examples by language:
 
 **JavaScript/TypeScript:**
 ```typescript
-// ❌ Repetido: fetch + loading + error
+// ❌ Repeated: fetch + loading + error
 const [loading, setLoading] = useState(false)
 const [data, setData] = useState(null)
 useEffect(() => { fetch()... }, [])
-// ✅ Custom hook o React Query
+// ✅ Custom hook or React Query
 const { data, loading } = useFetch(url)
 ```
 
 **Python:**
 ```python
-# ❌ Repetido: try + log + raise
+# ❌ Repeated: try + log + raise
 try: result = operation()
 except Exception as e:
     logger.error(e)
@@ -317,7 +317,7 @@ def operation(): ...
 
 **Go:**
 ```go
-// ❌ Repetido: error wrapping
+// ❌ Repeated: error wrapping
 if err != nil {
     log.Printf("error: %v", err)
     return fmt.Errorf("failed: %w", err)
@@ -330,138 +330,138 @@ if err != nil {
 
 ---
 
-## Paso 5: Generar Informe
+## Step 5: Generate Report
 
-**Responde directamente en el chat:**
+**Respond directly in the chat:**
 
 ```markdown
-# 📊 INFORME DE ANÁLISIS BRO REFACTOR
+# BRO REFACTOR ANALYSIS REPORT
 
-**Fecha:** [fecha actual]
-**Alcance:** `[ruta, descripción o "proyecto completo"]`
-**Lenguaje(s):** [detectados]
-**Archivos analizados:** [número]
-**Líneas de código totales:** ~[número]
-
----
-
-## Resumen Ejecutivo
-
-| Categoría | Ocurrencias | Impacto |
-|-----------|-------------|---------|
-| 🔄 Código duplicado | X | Alto/Medio/Bajo |
-| 🧩 Lógica similar | X | Alto/Medio/Bajo |
-| 📦 Funciones repetidas | X | Alto/Medio/Bajo |
-| 🏗️ Componentes similares | X | Alto/Medio/Bajo |
-| 🔢 Constantes duplicadas | X | Alto/Medio/Bajo |
-| 📝 Inconsistencias naming | X | Alto/Medio/Bajo |
-| 🎯 Patrones repetidos | X | Alto/Medio/Bajo |
-
-**Líneas potencialmente reducibles:** ~[número]
-**Prioridad de refactorización:** [🔴 Alta | 🟠 Media | 🟢 Baja]
+**Date:** [current date]
+**Scope:** `[path, description or "entire project"]`
+**Language(s):** [detected]
+**Files analyzed:** [number]
+**Total lines of code:** ~[number]
 
 ---
 
-## 🔄 Código Duplicado
+## Executive Summary
 
-### Duplicación #1: [Nombre descriptivo]
+| Category | Occurrences | Impact |
+|----------|-------------|--------|
+| Duplicate code | X | High/Medium/Low |
+| Similar logic | X | High/Medium/Low |
+| Repeated functions | X | High/Medium/Low |
+| Similar components | X | High/Medium/Low |
+| Duplicated constants | X | High/Medium/Low |
+| Naming inconsistencies | X | High/Medium/Low |
+| Repeated patterns | X | High/Medium/Low |
 
-**Similitud:** X%
-**Líneas afectadas:** X
+**Potentially reducible lines:** ~[number]
+**Refactoring priority:** [High | Medium | Low]
 
-| Ubicación | Líneas |
-|-----------|--------|
+---
+
+## Duplicate Code
+
+### Duplication #1: [Descriptive name]
+
+**Similarity:** X%
+**Affected lines:** X
+
+| Location | Lines |
+|----------|-------|
 | `src/components/UserCard.tsx` | 45-67 |
 | `src/components/AdminCard.tsx` | 32-54 |
 
-**Código duplicado:**
+**Duplicated code:**
 ```[lang]
-// Fragmento representativo (máx 15 líneas)
+// Representative snippet (max 15 lines)
 ```
 
-**Sugerencia:** Extraer a `components/shared/ProfileCard.tsx` con props para variaciones.
+**Suggestion:** Extract to `components/shared/ProfileCard.tsx` with props for variations.
 
 ---
 
-[Repetir para cada duplicación encontrada]
+[Repeat for each duplication found]
 
 ---
 
-## 🧩 Lógica Similar
+## Similar Logic
 
-### Caso #1: [Nombre descriptivo]
+### Case #1: [Descriptive name]
 
-**Archivos involucrados:**
-- `src/services/userService.ts` → función `validateUser()`
-- `src/services/adminService.ts` → función `validateAdmin()`
+**Files involved:**
+- `src/services/userService.ts` → function `validateUser()`
+- `src/services/adminService.ts` → function `validateAdmin()`
 
-**Qué hacen:**
-[Descripción breve]
+**What they do:**
+[Brief description]
 
-**Diferencias:**
-[Lista de diferencias]
+**Differences:**
+[List of differences]
 
-**Código actual:**
+**Current code:**
 ```[lang]
-// Fragmento de la primera
+// Snippet from the first
 ```
 ```[lang]
-// Fragmento de la segunda
+// Snippet from the second
 ```
 
-**Sugerencia:** [Cómo unificar]
+**Suggestion:** [How to unify]
 
 ---
 
-[Repetir para cada categoría con hallazgos]
+[Repeat for each category with findings]
 
 ---
 
-## 📋 Plan de Acción Recomendado
+## Recommended Action Plan
 
-### 🔴 Prioridad Alta (hacer primero)
-1. [Acción específica] — Impacto: X líneas, X archivos
-2. [Acción específica] — Impacto: X líneas, X archivos
+### High Priority (do first)
+1. [Specific action] — Impact: X lines, X files
+2. [Specific action] — Impact: X lines, X files
 
-### 🟠 Prioridad Media
-1. [Acción específica]
-2. [Acción específica]
+### Medium Priority
+1. [Specific action]
+2. [Specific action]
 
-### 🟢 Prioridad Baja (nice to have)
-1. [Acción específica]
-2. [Acción específica]
-
----
-
-## 📈 Estadísticas Adicionales
-
-| Métrica | Top 5 |
-|---------|-------|
-| Archivos con más duplicación | [lista] |
-| Funciones más largas | [lista con líneas] |
-| Archivos más grandes | [lista con líneas] |
+### Low Priority (nice to have)
+1. [Specific action]
+2. [Specific action]
 
 ---
 
-## ✨ Buenas Prácticas Encontradas
+## Additional Statistics
 
-[Patrones positivos, abstracciones bien hechas, código limpio identificado]
+| Metric | Top 5 |
+|--------|-------|
+| Files with most duplication | [list] |
+| Longest functions | [list with lines] |
+| Largest files | [list with lines] |
+
+---
+
+## Good Practices Found
+
+[Positive patterns, well-done abstractions, clean code identified]
 ```
 
 ---
 
-## Reglas de Operación
+## Operating Rules
 
-1. **Solo lectura**: No modificar ningún archivo, solo analizar y reportar
-2. **Detecta el lenguaje**: Adapta ejemplos y sugerencias al lenguaje del proyecto
-3. **Interpreta inteligentemente**: Buscar archivos relacionados con lo que pida el usuario
-4. **Confirma si hay ambigüedad**: Si hay múltiples coincidencias, pregunta
-5. **Sé exhaustivo**: Lee todos los archivos del alcance
-6. **Sé específico**: Indica archivos y líneas exactas
-7. **Prioriza por impacto**: Lo que más se repite primero
-8. **Sugiere soluciones concretas**: No solo señales problemas, propón extracciones
-9. **Ignora falsos positivos**: Código similar por necesidad (tests, migrations) no cuenta
-10. **Considera el contexto**: A veces la duplicación es intencional
-11. **Respeta estándares del proyecto**: Usa CLAUDE.md/AGENTS.md como referencia
-12. **Reconoce lo bueno**: Menciona abstracciones bien hechas
-13. **Cuantifica el impacto**: "X líneas reducibles" ayuda a priorizar
+1. **Read-only**: Don't modify any files, only analyze and report
+2. **Detect the language**: Adapt examples and suggestions to the project's language
+3. **Interpret intelligently**: Search for files related to what the user requests
+4. **Confirm if ambiguous**: If there are multiple matches, ask
+5. **Be exhaustive**: Read all files in scope
+6. **Be specific**: Indicate exact files and lines
+7. **Prioritize by impact**: What repeats most, first
+8. **Suggest concrete solutions**: Don't just point out problems, propose extractions
+9. **Ignore false positives**: Similar code by necessity (tests, migrations) doesn't count
+10. **Consider context**: Sometimes duplication is intentional
+11. **Respect project standards**: Use CLAUDE.md/AGENTS.md as reference
+12. **Recognize the good**: Mention well-done abstractions
+13. **Quantify the impact**: "X reducible lines" helps prioritize

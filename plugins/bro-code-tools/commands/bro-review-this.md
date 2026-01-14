@@ -1,185 +1,185 @@
 ---
 name: bro-review-this
-description: Auditoría de código - acepta rutas o descripciones naturales. Soporta múltiples lenguajes. Solo lectura.
+description: Code audit - accepts paths or natural descriptions. Multi-language support. Read-only.
 model: opus
 allowed-tools: ["Bash(read-only)", "Read", "Grep", "Glob"]
 ---
 
-# Revisión de Código
+# Code Review
 
-Analiza el código especificado y genera un informe detallado. **Solo lectura, no modifica nada. Soporta múltiples lenguajes.**
+Analyze the specified code and generate a detailed report. **Read-only, doesn't modify anything. Multi-language support.**
 
-## Entrada del Usuario
+## User Input
 
-El usuario puede especificar qué revisar de varias formas:
+The user can specify what to review in various ways:
 
-**Ruta exacta:**
+**Exact path:**
 - `/bro-review-this src/components/Button.tsx`
 - `/bro-review-this src/hooks/`
 - `/bro-review-this internal/handlers/`
 
-**Lenguaje natural (ejemplos ilustrativos):**
-- `/bro-review-this revisa el componente <nombre>`
-- `/bro-review-this revisa los servicios de <funcionalidad>`
-- `/bro-review-this analiza el módulo de <feature>`
-- `/bro-review-this revisa todo lo relacionado con <tema>`
+**Natural language (illustrative examples):**
+- `/bro-review-this review the <name> component`
+- `/bro-review-this review the <feature> services`
+- `/bro-review-this analyze the <feature> module`
+- `/bro-review-this review everything related to <topic>`
 
-**Sin argumentos:**
-- `/bro-review-this` → analiza todo el proyecto
+**No arguments:**
+- `/bro-review-this` → analyzes the entire project
 
-> **Nota:** Los términos como "login", "usuarios", "pagos" son solo ejemplos. Interpreta lo que el usuario solicite y busca los archivos correspondientes en el proyecto.
+> **Note:** Terms like "login", "users", "payments" are just examples. Interpret what the user requests and search for the corresponding files in the project.
 
 ---
 
-## Paso 1: Interpretar la Solicitud
+## Step 1: Interpret the Request
 
-### Si es ruta exacta:
-Usar directamente.
+### If it's an exact path:
+Use directly.
 
-### Si es lenguaje natural:
-Buscar archivos que coincidan con la descripción:
+### If it's natural language:
+Search for files matching the description:
 
 ```bash
-# Explorar estructura del proyecto (todas las extensiones)
+# Explore project structure (all extensions)
 find . -type f \( -name "*.ts" -o -name "*.tsx" -o -name "*.js" -o -name "*.jsx" -o -name "*.py" -o -name "*.go" -o -name "*.rs" -o -name "*.php" -o -name "*.rb" -o -name "*.java" -o -name "*.cs" -o -name "*.kt" \) | grep -v node_modules | grep -v vendor | grep -v target | grep -v __pycache__ | grep -v dist | grep -v .git
 
-# Buscar por nombre relacionado (reemplaza <término> con lo que pidió el usuario)
-find . -type f -iname "*<término>*" | grep -v node_modules
-find . -type d -iname "*<término>*" | grep -v node_modules
+# Search by related name (replace <term> with what the user requested)
+find . -type f -iname "*<term>*" | grep -v node_modules
+find . -type d -iname "*<term>*" | grep -v node_modules
 
-# Buscar contenido relacionado
-grep -ril "<término>" --include="*.ts" --include="*.tsx" --include="*.js" --include="*.py" --include="*.go" --include="*.rs" --include="*.php" | grep -v node_modules | head -20
+# Search related content
+grep -ril "<term>" --include="*.ts" --include="*.tsx" --include="*.js" --include="*.py" --include="*.go" --include="*.rs" --include="*.php" | grep -v node_modules | head -20
 ```
 
-**Confirma con el usuario** si encuentras múltiples coincidencias:
+**Confirm with the user** if you find multiple matches:
 ```
-Encontré estos archivos relacionados con "<término>":
-1. src/components/[Archivo1].tsx
-2. src/hooks/[Archivo2].ts
-3. src/services/[Archivo3].ts
+Found these files related to "<term>":
+1. src/components/[File1].tsx
+2. src/hooks/[File2].ts
+3. src/services/[File3].ts
 
-¿Reviso todos o alguno específico?
+Should I review all of them or a specific one?
 ```
 
-Si solo hay una coincidencia clara, procede directamente.
+If there's only one clear match, proceed directly.
 
 ---
 
-## Paso 2: Contexto del Proyecto
+## Step 2: Project Context
 
-Busca y lee archivos de configuración y estándares:
+Search and read configuration and standards files:
 
 ```bash
-# Estándares y guías del proyecto
+# Project standards and guides
 cat CLAUDE.md 2>/dev/null
 cat AGENTS.md 2>/dev/null
 cat .cursor/rules.md 2>/dev/null
 
-# Detectar stack y configuración
+# Detect stack and configuration
 cat package.json pyproject.toml go.mod Cargo.toml composer.json Gemfile pom.xml 2>/dev/null
 
-# Configuración de linting y tipos
+# Linting and types configuration
 cat .eslintrc* 2>/dev/null
 cat tsconfig.json 2>/dev/null
 cat biome.json 2>/dev/null
 cat pyproject.toml 2>/dev/null
 ```
 
-Usa esta información para evaluar el código según los estándares específicos del proyecto.
+Use this information to evaluate code against project-specific standards.
 
-**Límite:** Máximo 50 archivos. Si hay más, pide acotar.
+**Limit:** Maximum 50 files. If there are more, ask to narrow down.
 
 ---
 
-## Paso 3: Leer y Analizar
+## Step 3: Read and Analyze
 
 ```bash
-cat [archivo]
-wc -l [archivo]
+cat [file]
+wc -l [file]
 ```
 
 ---
 
-## Paso 4: Análisis por Categorías
+## Step 4: Analysis by Categories
 
-Revisa cada archivo buscando problemas en estas categorías, ordenadas por prioridad:
+Review each file looking for problems in these categories, ordered by priority:
 
 ---
 
-### 🔴 P0 - CRÍTICO: Bugs y Errores Lógicos
+### P0 - CRITICAL: Bugs and Logic Errors
 
-Problemas que causarán fallos en producción:
+Problems that will cause production failures:
 
-- **Variables no inicializadas** o acceso a propiedades de `null`/`undefined`
-- **Condiciones imposibles** o lógica invertida
-- **Errores off-by-one** en iteraciones y límites
-- **Race conditions** en código asíncrono
-- **Excepciones no capturadas** que pueden crashear la aplicación
-- **Memory leaks** o recursos no liberados (conexiones, listeners, timers)
-- **Tipos incorrectos** que pasarán en runtime pero fallarán
-- **Estados inconsistentes** que corrompen datos
+- **Uninitialized variables** or access to `null`/`undefined` properties
+- **Impossible conditions** or inverted logic
+- **Off-by-one errors** in iterations and boundaries
+- **Race conditions** in asynchronous code
+- **Uncaught exceptions** that can crash the application
+- **Memory leaks** or unreleased resources (connections, listeners, timers)
+- **Incorrect types** that will pass at runtime but fail
+- **Inconsistent states** that corrupt data
 
-#### Ejemplos por lenguaje:
+#### Examples by language:
 
-| Problema | JS/TS | Python | Go | Rust | PHP | Ruby |
-|----------|-------|--------|-----|------|-----|------|
-| Null access | `?.` faltante | `None` check | `nil` check | `Option` | `??` | `&.` |
+| Problem | JS/TS | Python | Go | Rust | PHP | Ruby |
+|---------|-------|--------|-----|------|-----|------|
+| Null access | `?.` missing | `None` check | `nil` check | `Option` | `??` | `&.` |
 | Error handling | `.catch()` | `try/except` | `if err != nil` | `Result` | `try/catch` | `rescue` |
 | Race conditions | ✓ | ✓ | goroutines | threads | - | threads |
 
 **JavaScript/TypeScript:**
 ```javascript
-// ❌ Null sin verificar
+// ❌ Null without check
 user.profile.name
-// ✅ Con optional chaining
+// ✅ With optional chaining
 user?.profile?.name
 ```
 
 **Python:**
 ```python
-# ❌ None sin verificar
+# ❌ None without check
 user.profile.name
-# ✅ Con verificación
+# ✅ With verification
 user.profile.name if user and user.profile else None
 ```
 
 **Go:**
 ```go
-// ❌ Error ignorado
+// ❌ Error ignored
 result, _ := getData()
-// ✅ Error manejado
+// ✅ Error handled
 result, err := getData()
 if err != nil { return err }
 ```
 
 **Rust:**
 ```rust
-// ❌ Unwrap en producción
+// ❌ Unwrap in production
 let value = result.unwrap()
-// ✅ Con manejo
+// ✅ With handling
 let value = result?
 ```
 
 ---
 
-### 🔴 P0 - CRÍTICO: Seguridad
+### P0 - CRITICAL: Security
 
-Vulnerabilidades que exponen el sistema:
+Vulnerabilities that expose the system:
 
-- **Credenciales hardcodeadas**: API keys, passwords, tokens, secrets
-- **Inyección**: SQL injection, command injection, XSS
-- **Inputs no validados**: datos de usuario usados sin sanitizar
-- **Exposición de datos sensibles**: logs con información privada
-- **Configuraciones inseguras**: CORS permisivo, HTTPS deshabilitado
-- **Dependencias vulnerables**: revisar package.json/requirements.txt si están en el alcance
+- **Hardcoded credentials**: API keys, passwords, tokens, secrets
+- **Injection**: SQL injection, command injection, XSS
+- **Unvalidated inputs**: user data used without sanitization
+- **Sensitive data exposure**: logs with private information
+- **Insecure configurations**: permissive CORS, disabled HTTPS
+- **Vulnerable dependencies**: check package.json/requirements.txt if in scope
 
-#### SQL Injection por lenguaje:
+#### SQL Injection by language:
 
 **JavaScript/TypeScript:**
 ```javascript
 // ❌ Vulnerable
 `SELECT * FROM users WHERE id = ${id}`
-// ✅ Seguro
+// ✅ Safe
 db.query('SELECT * FROM users WHERE id = ?', [id])
 ```
 
@@ -187,7 +187,7 @@ db.query('SELECT * FROM users WHERE id = ?', [id])
 ```python
 # ❌ Vulnerable
 f"SELECT * FROM users WHERE id = {id}"
-# ✅ Seguro
+# ✅ Safe
 cursor.execute("SELECT * FROM users WHERE id = %s", (id,))
 ```
 
@@ -195,7 +195,7 @@ cursor.execute("SELECT * FROM users WHERE id = %s", (id,))
 ```go
 // ❌ Vulnerable
 fmt.Sprintf("SELECT * FROM users WHERE id = %s", id)
-// ✅ Seguro
+// ✅ Safe
 db.Query("SELECT * FROM users WHERE id = $1", id)
 ```
 
@@ -203,7 +203,7 @@ db.Query("SELECT * FROM users WHERE id = $1", id)
 ```php
 // ❌ Vulnerable
 "SELECT * FROM users WHERE id = " . $id
-// ✅ Seguro
+// ✅ Safe
 $stmt = $pdo->prepare("SELECT * FROM users WHERE id = ?");
 ```
 
@@ -211,14 +211,14 @@ $stmt = $pdo->prepare("SELECT * FROM users WHERE id = ?");
 ```ruby
 # ❌ Vulnerable
 "SELECT * FROM users WHERE id = #{id}"
-# ✅ Seguro
+# ✅ Safe
 User.where(id: id)
 ```
 
 #### Command Injection:
 
-| Lenguaje | ❌ Vulnerable | ✅ Seguro |
-|----------|--------------|----------|
+| Language | ❌ Vulnerable | ✅ Safe |
+|----------|--------------|---------|
 | JS | `exec(cmd)` | `execFile(cmd, args)` |
 | Python | `os.system(f"ping {h}")` | `subprocess.run(['ping', h])` |
 | Go | `exec.Command("sh", "-c", input)` | `exec.Command("ping", host)` |
@@ -227,28 +227,28 @@ User.where(id: id)
 
 #### XSS:
 
-| Lenguaje | ❌ Vulnerable |
+| Language | ❌ Vulnerable |
 |----------|--------------|
 | JS/React | `dangerouslySetInnerHTML`, `innerHTML` |
-| PHP | `echo $input` sin escape |
-| Ruby/Rails | `raw()`, `html_safe` mal usado |
-| Go/templ | `template.HTML()` con input |
+| PHP | `echo $input` without escaping |
+| Ruby/Rails | `raw()`, `html_safe` misused |
+| Go/templ | `template.HTML()` with input |
 
 ---
 
-### 🟠 P1 - ALTO: Problemas de Rendimiento
+### P1 - HIGH: Performance Issues
 
-Código que degradará la experiencia del usuario:
+Code that will degrade user experience:
 
-- **Operaciones O(n²) o peores** donde existe solución O(n)
-- **Queries N+1**: múltiples llamadas a DB/API en loops
-- **Operaciones bloqueantes** en código que debería ser async
-- **Cálculos costosos** repetidos sin memoización
-- **Re-renders innecesarios** en componentes React
-- **Bundles inflados**: imports que traen librerías completas
-- **Falta de paginación** en listas potencialmente grandes
+- **O(n²) or worse operations** where O(n) solution exists
+- **N+1 queries**: multiple DB/API calls in loops
+- **Blocking operations** in code that should be async
+- **Expensive calculations** repeated without memoization
+- **Unnecessary re-renders** in React components
+- **Bloated bundles**: imports that bring entire libraries
+- **Missing pagination** in potentially large lists
 
-#### O(n²) → O(n) por lenguaje:
+#### O(n²) → O(n) by language:
 
 **JavaScript/TypeScript:**
 ```javascript
@@ -281,51 +281,51 @@ for _, b := range slice2 { m[b.ID] = b }
 
 #### String concatenation:
 
-| Lenguaje | ❌ Malo (en loop) | ✅ Bueno |
-|----------|------------------|---------|
+| Language | ❌ Bad (in loop) | ✅ Good |
+|----------|-----------------|---------|
 | JS/TS | `result += str` | `parts.join('')` |
 | Python | `result += s` | `''.join(strings)` |
 | Go | `result += s` | `strings.Builder` |
-| Rust | múltiples `push_str` | `String::with_capacity` |
+| Rust | multiple `push_str` | `String::with_capacity` |
 | Java | `result += s` | `StringBuilder` |
 
 ---
 
-### 🟠 P1 - ALTO: Errores de Tipado y Contratos
+### P1 - HIGH: Typing and Contract Errors
 
-Problemas que causarán bugs sutiles:
+Problems that will cause subtle bugs:
 
-| Lenguaje | Problema | Ejemplo |
-|----------|----------|---------|
-| TypeScript | `any` implícito | `function fn(x)` sin tipo |
-| Python | Type hint mal | `def fn(x: str) -> int: return x` |
-| Go | `interface{}` | Usar generics si Go 1.18+ |
-| Rust | Trait bounds | Bounds innecesariamente complejos |
+| Language | Problem | Example |
+|----------|---------|---------|
+| TypeScript | implicit `any` | `function fn(x)` without type |
+| Python | Wrong type hint | `def fn(x: str) -> int: return x` |
+| Go | `interface{}` | Use generics if Go 1.18+ |
+| Rust | Trait bounds | Unnecessarily complex bounds |
 
-- **Any implícitos** o casteos forzados sin validación
-- **Tipos opcionales** usados sin verificar existencia
-- **Interfaces incompletas** que no reflejan la realidad
-- **Parámetros con tipos incorrectos** en llamadas a funciones
-- **Return types inconsistentes** con lo que realmente retorna
+- **Implicit any** or forced casts without validation
+- **Optional types** used without checking existence
+- **Incomplete interfaces** that don't reflect reality
+- **Parameters with incorrect types** in function calls
+- **Inconsistent return types** with what's actually returned
 
 ---
 
-### 🟡 P2 - MEDIO: Calidad y Mantenibilidad
+### P2 - MEDIUM: Quality and Maintainability
 
-Código que dificultará el trabajo futuro:
+Code that will make future work difficult:
 
-- **Código duplicado**: bloques repetidos que deberían extraerse (>5 líneas)
-- **Funciones demasiado largas** (>50 líneas): difíciles de entender y testear
-- **Anidamiento excesivo** (>3 niveles): complejidad cognitiva alta
-- **Ternarios anidados**: preferir switch/if-else para claridad
-- **Nombres poco descriptivos**: variables de una letra, abreviaciones crípticas
-- **Magic numbers/strings**: valores sin explicación ni constantes
-- **Comentarios desactualizados**: peor que no tener comentarios
-- **Acoplamiento alto**: dependencias circulares, módulos que saben demasiado
+- **Duplicate code**: repeated blocks that should be extracted (>5 lines)
+- **Functions too long** (>50 lines): hard to understand and test
+- **Excessive nesting** (>3 levels): high cognitive complexity
+- **Nested ternaries**: prefer switch/if-else for clarity
+- **Non-descriptive names**: single-letter variables, cryptic abbreviations
+- **Magic numbers/strings**: values without explanation or constants
+- **Outdated comments**: worse than having no comments
+- **High coupling**: circular dependencies, modules that know too much
 
-### Estándares por lenguaje:
+### Standards by language:
 
-| Lenguaje | Estándar |
+| Language | Standard |
 |----------|----------|
 | JS/TS | ESLint, Prettier |
 | Python | PEP 8, Black, Ruff |
@@ -336,24 +336,24 @@ Código que dificultará el trabajo futuro:
 
 ---
 
-### 🟡 P2 - MEDIO: Violaciones de Estándares del Proyecto
+### P2 - MEDIUM: Project Standards Violations
 
-Si existe CLAUDE.md, AGENTS.md o configuración de linting, verifica:
+If CLAUDE.md, AGENTS.md or linting configuration exists, verify:
 
-- **Imports desordenados** o sin extensiones (si el proyecto las requiere)
-- **Arrow functions** donde se espera `function` keyword (o viceversa)
-- **Falta de return types** explícitos en funciones públicas
-- **Componentes React** sin Props types definidos
-- **Patrones de error handling** inconsistentes con el resto del código
-- **Convenciones de naming** no seguidas
+- **Unordered imports** or without extensions (if the project requires them)
+- **Arrow functions** where `function` keyword is expected (or vice versa)
+- **Missing return types** on public functions
+- **React components** without defined Props types
+- **Error handling patterns** inconsistent with rest of code
+- **Naming conventions** not followed
 
 ---
 
-### 🔵 P3 - BAJO: Código Basura y Limpieza
+### P3 - LOW: Code Trash and Cleanup
 
-Ruido que debería eliminarse:
+Noise that should be removed:
 
-| Lenguaje | Debugging a remover |
+| Language | Debugging to remove |
 |----------|---------------------|
 | JS/TS | `console.log`, `debugger` |
 | Python | `print()`, `breakpoint()` |
@@ -362,119 +362,119 @@ Ruido que debería eliminarse:
 | PHP | `var_dump()`, `dd()` |
 | Ruby | `puts`, `binding.pry` |
 
-- **Código comentado**: si no sirve, se borra; Git guarda el historial
-- **Variables declaradas sin usar**: dead code
-- **Imports no utilizados**: inflan el bundle innecesariamente
-- **TODOs obsoletos**: sin fecha ni owner, nunca se resuelven
-- **Funciones muertas**: nunca llamadas desde ningún lugar
-- **Archivos vacíos o placeholder**: si no tienen contenido útil
+- **Commented code**: if not useful, delete it; Git keeps history
+- **Declared unused variables**: dead code
+- **Unused imports**: bloat the bundle unnecessarily
+- **Obsolete TODOs**: without date or owner, never get resolved
+- **Dead functions**: never called from anywhere
+- **Empty or placeholder files**: if they don't have useful content
 
 ---
 
-### 🔵 P3 - BAJO: Oportunidades de Simplificación
+### P3 - LOW: Simplification Opportunities
 
-Mejoras opcionales que aumentan la elegancia:
+Optional improvements that increase elegance:
 
-- **Lógica que puede simplificarse** sin perder claridad
-- **Abstracciones que pueden consolidarse**
-- **Patrones modernos** disponibles (optional chaining, nullish coalescing)
-- **Utilidades existentes** en el proyecto que podrían reutilizarse
+- **Logic that can be simplified** without losing clarity
+- **Abstractions that can be consolidated**
+- **Modern patterns** available (optional chaining, nullish coalescing)
+- **Existing utilities** in the project that could be reused
 
 ---
 
-## Paso 5: Generar Informe
+## Step 5: Generate Report
 
-**Responde directamente en el chat con este formato:**
+**Respond directly in the chat with this format:**
 
 ```markdown
-# 📋 INFORME DE REVISIÓN BRO CODE-REVIEW
+# BRO CODE-REVIEW REPORT
 
-**Fecha:** [fecha actual]
-**Alcance:** `[ruta o descripción]`
-**Lenguaje(s):** [detectados]
-**Archivos analizados:** [número]
-**Líneas totales:** ~[número aproximado]
-
----
-
-## Resumen Ejecutivo
-
-| Severidad | Cantidad | Descripción |
-|-----------|----------|-------------|
-| 🔴 P0 Crítico | X | Bugs y seguridad - Requieren atención inmediata |
-| 🟠 P1 Alto | X | Rendimiento y tipos - Deberían corregirse |
-| 🟡 P2 Medio | X | Calidad - Recomendado corregir |
-| 🔵 P3 Bajo | X | Limpieza - Opcional |
-
-**Calificación:** [⭐⭐⭐⭐⭐ Excelente | ⭐⭐⭐⭐ Bueno | ⭐⭐⭐ Aceptable | ⭐⭐ Necesita Trabajo | ⭐ Crítico]
+**Date:** [current date]
+**Scope:** `[path or description]`
+**Language(s):** [detected]
+**Files analyzed:** [number]
+**Total lines:** ~[approximate number]
 
 ---
 
-## Hallazgos Detallados
+## Executive Summary
 
-### 📁 [ruta/al/archivo.ext]
+| Severity | Count | Description |
+|----------|-------|-------------|
+| P0 Critical | X | Bugs and security - Require immediate attention |
+| P1 High | X | Performance and types - Should be fixed |
+| P2 Medium | X | Quality - Recommended to fix |
+| P3 Low | X | Cleanup - Optional |
 
-#### 🔴 P0: [Título descriptivo del problema]
+**Rating:** [Excellent | Good | Acceptable | Needs Work | Critical]
 
-**Líneas:** XX-XX
-**Categoría:** [Bug | Seguridad | Rendimiento | Tipos | Calidad | Limpieza]
+---
 
-**Problema:**
-[Descripción clara de qué está mal]
+## Detailed Findings
 
-**Código actual:**
-```[lenguaje]
-[fragmento problemático con contexto suficiente]
+### [path/to/file.ext]
+
+#### P0: [Descriptive problem title]
+
+**Lines:** XX-XX
+**Category:** [Bug | Security | Performance | Types | Quality | Cleanup]
+
+**Problem:**
+[Clear description of what's wrong]
+
+**Current code:**
+```[language]
+[problematic snippet with sufficient context]
 ```
 
-**Corrección sugerida:**
-```[lenguaje]
-[código corregido]
+**Suggested fix:**
+```[language]
+[corrected code]
 ```
 
-**Impacto si no se corrige:**
-[Descripción concreta del escenario de fallo: qué pasará, bajo qué condiciones, qué consecuencias tendrá para usuarios/sistema]
+**Impact if not fixed:**
+[Concrete description of failure scenario: what will happen, under what conditions, what consequences for users/system]
 
 ---
 
-[Repetir para cada hallazgo, agrupados por archivo]
+[Repeat for each finding, grouped by file]
 
 ---
 
-## Plan de Acción
+## Action Plan
 
-**Inmediato (P0):** [lista de acciones críticas]
-**Corto plazo (P1):** [lista de mejoras importantes]
-**Opcional (P2-P3):** [lista de mejoras menores]
-
----
-
-## ✨ Aspectos Positivos
-
-[Buenas prácticas encontradas en el código - no todo es crítica]
+**Immediate (P0):** [list of critical actions]
+**Short term (P1):** [list of important improvements]
+**Optional (P2-P3):** [list of minor improvements]
 
 ---
 
-## Recomendaciones Finales
+## Positive Aspects
 
-[Lista breve de acciones prioritarias para mejorar el código]
+[Good practices found in the code - not everything is criticism]
+
+---
+
+## Final Recommendations
+
+[Brief list of priority actions to improve the code]
 ```
 
 ---
 
-## Reglas de Operación
+## Operating Rules
 
-1. **Solo lectura**: No modificar ningún archivo, solo analizar y reportar
-2. **Detecta el lenguaje**: Adapta análisis y ejemplos al lenguaje del proyecto
-3. **Interpreta inteligentemente**: Buscar archivos relacionados con lo que pida el usuario
-4. **Confirma si hay ambigüedad**: Si hay múltiples coincidencias, pregunta
-5. **Sé específico**: Indica líneas exactas, muestra código concreto, no generalices
-6. **Prioriza correctamente**: Un bug crítico importa más que 10 mejoras de estilo
-7. **Explica el impacto real**: No digas "puede causar problemas", describe el escenario exacto
-8. **Propón soluciones idiomáticas**: Patrones del lenguaje detectado
-9. **Evita falsos positivos**: Si no estás seguro, márcalo como "posible problema a verificar"
-10. **Contexto importa**: Código de tests tiene reglas diferentes a producción
-11. **Respeta estándares del proyecto**: Usa CLAUDE.md/AGENTS.md como referencia
-12. **Claridad sobre brevedad**: Código explícito es mejor que one-liners crípticos
-13. **Reconoce lo bueno**: Menciona prácticas positivas encontradas, no solo problemas
-14. **Sé pragmático**: No todo necesita ser perfecto, enfócate en lo que realmente importa
+1. **Read-only**: Don't modify any files, only analyze and report
+2. **Detect the language**: Adapt analysis and examples to the project's language
+3. **Interpret intelligently**: Search for files related to what the user requests
+4. **Confirm if ambiguous**: If there are multiple matches, ask
+5. **Be specific**: Indicate exact lines, show concrete code, don't generalize
+6. **Prioritize correctly**: A critical bug matters more than 10 style improvements
+7. **Explain real impact**: Don't say "may cause problems", describe the exact scenario
+8. **Propose idiomatic solutions**: Patterns of the detected language
+9. **Avoid false positives**: If unsure, mark as "possible issue to verify"
+10. **Context matters**: Test code has different rules than production
+11. **Respect project standards**: Use CLAUDE.md/AGENTS.md as reference
+12. **Clarity over brevity**: Explicit code is better than cryptic one-liners
+13. **Recognize the good**: Mention positive practices found, not just problems
+14. **Be pragmatic**: Not everything needs to be perfect, focus on what really matters

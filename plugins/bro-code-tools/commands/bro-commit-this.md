@@ -1,187 +1,187 @@
 ---
 name: bro-commit-this
-description: Analiza los cambios pendientes y crea un commit con mensaje descriptivo siguiendo Conventional Commits
+description: Analyzes pending changes and creates a commit with a descriptive message following Conventional Commits
 allowed-tools: ["Bash", "Read", "Grep"]
 model: haiku
 ---
 
 # Auto Commit
 
-Analiza los archivos pendientes de commit, genera un mensaje descriptivo y ejecuta el commit.
+Analyze pending files, generate a descriptive message, and execute the commit.
 
-## Paso 1: Verificar estado del repositorio
+## Step 1: Check repository status
 
 ```bash
 git status --short
 ```
 
-### Si no hay cambios
+### If there are no changes
 
-Si el comando no devuelve nada, responde:
+If the command returns nothing, respond:
 
 ```
-✅ No hay cambios pendientes
+✅ No pending changes
 
-El directorio de trabajo está limpio. No hay nada que commitear.
+Working directory is clean. Nothing to commit.
 ```
 
-Detente aquí si no hay cambios.
+Stop here if there are no changes.
 
-## Paso 2: Preparar archivos
+## Step 2: Stage files
 
-Verifica si hay archivos staged:
+Check if there are staged files:
 
 ```bash
 git diff --cached --name-only
 ```
 
-Si no hay archivos staged, agrega todos los cambios:
+If no files are staged, add all changes:
 
 ```bash
 git add -A
 ```
 
-## Paso 3: Analizar los cambios
+## Step 3: Analyze changes
 
-Obtén el diff completo de lo que se va a commitear:
+Get the full diff of what will be committed:
 
 ```bash
 git diff --cached --stat
 git diff --cached
 ```
 
-Lee y analiza:
-- Qué archivos fueron modificados/agregados/eliminados
-- Qué tipo de cambios son (feature, fix, refactor, docs, etc.)
-- Cuál es el propósito principal del cambio
+Read and analyze:
+- Which files were modified/added/deleted
+- What type of changes they are (feature, fix, refactor, docs, etc.)
+- What is the main purpose of the change
 
-## Paso 4: Generar mensaje de commit
+## Step 4: Generate commit message
 
-Genera un mensaje siguiendo **Conventional Commits**:
+Generate a message following **Conventional Commits**:
 
-### Formato
+### Format
 
 ```
-<tipo>(<alcance>): <descripción corta>
+<type>(<scope>): <short description>
 
-<cuerpo opcional - qué y por qué>
+<optional body - what and why>
 
-<footer opcional - breaking changes, issues>
+<optional footer - breaking changes, issues>
 ```
 
-### Tipos disponibles
+### Available types
 
-| Tipo | Cuándo usarlo |
-|------|---------------|
-| `feat` | Nueva funcionalidad |
-| `fix` | Corrección de bug |
-| `refactor` | Cambio de código que no agrega feature ni corrige bug |
-| `docs` | Cambios en documentación |
-| `style` | Formateo, punto y coma faltantes, etc. (no afecta lógica) |
-| `test` | Agregar o modificar tests |
-| `chore` | Tareas de mantenimiento, dependencias, config |
-| `perf` | Mejoras de rendimiento |
-| `ci` | Cambios en CI/CD |
-| `build` | Cambios en build system o dependencias externas |
-| `revert` | Revertir commit anterior |
+| Type | When to use |
+|------|-------------|
+| `feat` | New feature |
+| `fix` | Bug fix |
+| `refactor` | Code change that doesn't add a feature or fix a bug |
+| `docs` | Documentation changes |
+| `style` | Formatting, missing semicolons, etc. (doesn't affect logic) |
+| `test` | Adding or modifying tests |
+| `chore` | Maintenance tasks, dependencies, config |
+| `perf` | Performance improvements |
+| `ci` | CI/CD changes |
+| `build` | Changes to build system or external dependencies |
+| `revert` | Revert previous commit |
 
-### Reglas del mensaje
+### Message rules
 
-1. **Descripción corta**: máximo 50 caracteres, imperativo, sin punto final
-2. **Alcance**: opcional, indica el módulo/componente afectado
-3. **Cuerpo**: opcional, explica qué y por qué (no cómo)
-4. **En español o inglés**: según el idioma predominante en el proyecto
+1. **Short description**: maximum 50 characters, imperative mood, no period at end
+2. **Scope**: optional, indicates affected module/component
+3. **Body**: optional, explains what and why (not how)
+4. **Language**: match the predominant language in previous commits
 
-### Ejemplos
+### Examples
 
 ```bash
 # Simple
-git commit -m "feat(auth): agregar login con Google"
+git commit -m "feat(auth): add Google login"
 
-# Con cuerpo
-git commit -m "fix(api): corregir timeout en peticiones largas
+# With body
+git commit -m "fix(api): fix timeout on long requests
 
-El timeout de 30s era insuficiente para uploads grandes.
-Aumentado a 120s para archivos hasta 100MB."
+The 30s timeout was insufficient for large uploads.
+Increased to 120s for files up to 100MB."
 
 # Breaking change
-git commit -m "refactor(db)!: migrar de MySQL a PostgreSQL
+git commit -m "refactor(db)!: migrate from MySQL to PostgreSQL
 
-BREAKING CHANGE: requiere nueva configuración de conexión"
+BREAKING CHANGE: requires new connection configuration"
 ```
 
-## Paso 5: Ejecutar el commit
+## Step 5: Execute the commit
 
-Una vez analizado el diff y generado el mensaje apropiado:
+Once the diff is analyzed and the appropriate message is generated:
 
 ```bash
-git commit -m "<mensaje generado>"
+git commit -m "<generated message>"
 ```
 
-## Paso 6: Confirmar
+## Step 6: Confirm
 
-Muestra el resultado:
+Show the result:
 
 ```
-✅ Commit creado exitosamente
+✅ Commit created successfully
 
-**Hash:** [hash corto]
-**Mensaje:** [mensaje del commit]
+**Hash:** [short hash]
+**Message:** [commit message]
 
-**Archivos incluidos:**
-- [lista de archivos]
+**Files included:**
+- [file list]
 
-**Siguiente paso:** `git push` para subir los cambios
+**Next step:** `git push` to upload the changes
 ```
 
-## Reglas
+## Rules
 
-1. **Analiza TODOS los cambios** antes de decidir el tipo
-2. **Un commit = un propósito** — Si hay cambios muy diversos, sugiere dividirlos
-3. **Mensaje claro** — Alguien debe entender qué se hizo sin ver el código
-4. **No uses mensajes genéricos** — Evita "update", "fix", "changes"
-5. **Detecta el idioma** — Usa el idioma predominante en commits anteriores
-6. **Si hay muchos cambios diversos**, pregunta al usuario si quiere:
-   - Un solo commit general
-   - Dividir en múltiples commits
-7. **NO agregues "Co-Authored-By"** — El mensaje debe ser limpio, sin líneas de co-autoría de IA
+1. **Analyze ALL changes** before deciding the type
+2. **One commit = one purpose** — If changes are too diverse, suggest splitting them
+3. **Clear message** — Someone should understand what was done without seeing the code
+4. **Don't use generic messages** — Avoid "update", "fix", "changes"
+5. **Detect language** — Use the predominant language from previous commits
+6. **If there are many diverse changes**, ask the user if they want:
+   - A single general commit
+   - Split into multiple commits
+7. **DON'T add "Co-Authored-By"** — Message should be clean, without AI co-authorship lines
 
-## Verificación previa al commit
+## Pre-commit verification
 
-Antes de ejecutar el commit, verifica:
+Before executing the commit, check:
 
 ```bash
-# Ver si hay linter configurado
+# Check if linter is configured
 npm run lint 2>/dev/null || yarn lint 2>/dev/null || true
 ```
 
-Si el linter falla, informa al usuario pero no detengas el commit (es su decisión).
+If the linter fails, inform the user but don't stop the commit (it's their decision).
 
-## Casos especiales
+## Special cases
 
-### Si detectas archivos sensibles
+### If sensitive files are detected
 
-Si ves archivos como `.env`, `*.key`, `credentials.*`, `*secret*`:
+If you see files like `.env`, `*.key`, `credentials.*`, `*secret*`:
 
 ```
-⚠️ ADVERTENCIA: Detecté archivos potencialmente sensibles:
+⚠️ WARNING: Detected potentially sensitive files:
 - .env.local
 - config/secrets.json
 
-¿Estás seguro de que quieres incluirlos en el commit?
-Estos archivos normalmente deberían estar en .gitignore
+Are you sure you want to include them in the commit?
+These files should normally be in .gitignore
 ```
 
-Espera confirmación antes de continuar.
+Wait for confirmation before continuing.
 
-### Si hay cambios muy grandes
+### If changes are too large
 
-Si hay más de 500 líneas cambiadas o más de 20 archivos:
+If there are more than 500 lines changed or more than 20 files:
 
 ```
-ℹ️ Este commit incluye muchos cambios:
-- X archivos modificados
-- +Y líneas / -Z líneas
+ℹ️ This commit includes many changes:
+- X files modified
+- +Y lines / -Z lines
 
-¿Prefieres dividirlo en commits más pequeños?
+Would you prefer to split it into smaller commits?
 ```

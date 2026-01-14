@@ -1,192 +1,192 @@
 ---
 name: bro-review-before-i-screw-up
-description: Auditoría completa de cambios pendientes antes del commit - detecta bugs, problemas de calidad, seguridad y oportunidades de mejora. Soporta múltiples lenguajes.
+description: Complete audit of pending changes before commit - detects bugs, quality issues, security problems and improvement opportunities. Multi-language support.
 model: opus
 allowed-tools: ["Bash", "Read", "Grep"]
 ---
 
-# Revisión Pre-Commit Completa
+# Complete Pre-Commit Review
 
-Analiza exhaustivamente todos los cambios pendientes antes de hacer commit. Detecta problemas críticos, evalúa calidad del código y sugiere mejoras concretas. **Soporta múltiples lenguajes.**
+Exhaustively analyze all pending changes before committing. Detect critical issues, evaluate code quality and suggest concrete improvements. **Multi-language support.**
 
-## Paso 1: Identificar Cambios Pendientes
+## Step 1: Identify Pending Changes
 
-Ejecuta estos comandos para obtener el estado actual:
+Run these commands to get the current state:
 
 ```bash
-# Archivos modificados (tracked)
+# Modified files (tracked)
 git diff --name-only HEAD
 
-# Archivos nuevos (untracked)
+# New files (untracked)
 git ls-files --others --exclude-standard
 
-# Archivos staged
+# Staged files
 git diff --cached --name-only
 ```
 
-### Si no hay cambios
+### If there are no changes
 
-Si todos los comandos devuelven vacío, detente y responde:
+If all commands return empty, stop and respond:
 
 ```
-✅ Directorio de trabajo limpio
+✅ Clean working directory
 
-No hay cambios pendientes para revisar. Nada que auditar.
+No pending changes to review. Nothing to audit.
 ```
 
-**No continúes si no hay archivos que revisar.**
+**Don't continue if there are no files to review.**
 
-## Paso 2: Obtener Contexto Completo
+## Step 2: Get Complete Context
 
 ```bash
-# Diff completo de cambios no staged
+# Full diff of unstaged changes
 git diff HEAD
 
-# Diff de cambios staged (si existen)
+# Diff of staged changes (if any)
 git diff --cached
 
-# Ver estructura del proyecto para contexto
+# See project structure for context
 ls -la
 
-# Detectar stack
+# Detect stack
 cat package.json pyproject.toml go.mod Cargo.toml composer.json Gemfile 2>/dev/null
 
-# Estándares del proyecto
+# Project standards
 cat CLAUDE.md AGENTS.md 2>/dev/null
 ```
 
-Si existe `CLAUDE.md`, `AGENTS.md`, `README.md` o archivos de configuración del proyecto (`.eslintrc`, `tsconfig.json`, etc.), léelos para entender los estándares del proyecto.
+If `CLAUDE.md`, `AGENTS.md`, `README.md` or project configuration files (`.eslintrc`, `tsconfig.json`, etc.) exist, read them to understand project standards.
 
-## Paso 3: Análisis por Categorías
+## Step 3: Analysis by Categories
 
-Revisa cada archivo modificado buscando problemas en estas categorías, ordenadas por prioridad:
+Review each modified file looking for problems in these categories, ordered by priority:
 
 ---
 
-### 🔴 P0 - CRÍTICO: Bugs y Errores Lógicos
+### P0 - CRITICAL: Bugs and Logic Errors
 
-Problemas que causarán fallos en producción:
+Problems that will cause production failures:
 
-- **Variables no inicializadas** o acceso a propiedades de `null`/`undefined`
-- **Condiciones imposibles** o lógica invertida
-- **Errores off-by-one** en iteraciones y límites
-- **Race conditions** en código asíncrono
-- **Excepciones no capturadas** que pueden crashear la aplicación
-- **Memory leaks** o recursos no liberados (conexiones, listeners, timers)
-- **Tipos incorrectos** que pasarán en runtime pero fallarán
-- **Estados inconsistentes** que corrompen datos
+- **Uninitialized variables** or access to `null`/`undefined` properties
+- **Impossible conditions** or inverted logic
+- **Off-by-one errors** in iterations and boundaries
+- **Race conditions** in asynchronous code
+- **Uncaught exceptions** that can crash the application
+- **Memory leaks** or unreleased resources (connections, listeners, timers)
+- **Incorrect types** that will pass at runtime but fail
+- **Inconsistent states** that corrupt data
 
-#### Ejemplos por lenguaje:
+#### Examples by language:
 
-| Lenguaje | Problema | Ejemplo |
-|----------|----------|---------|
-| JS/TS | null/undefined sin verificar | `user.profile.name` sin optional chaining |
+| Language | Problem | Example |
+|----------|---------|---------|
+| JS/TS | null/undefined without check | `user.profile.name` without optional chaining |
 | Python | Mutable default args | `def f(lst=[])` |
-| Go | Error ignorado | `result, _ := fn()` |
-| Rust | unwrap() en producción | `value.unwrap()` |
-| PHP | Comparación débil | `$a == "0"` vs `$a === "0"` |
+| Go | Ignored error | `result, _ := fn()` |
+| Rust | unwrap() in production | `value.unwrap()` |
+| PHP | Weak comparison | `$a == "0"` vs `$a === "0"` |
 
 ---
 
-### 🔴 P0 - CRÍTICO: Seguridad
+### P0 - CRITICAL: Security
 
-Vulnerabilidades que exponen el sistema:
+Vulnerabilities that expose the system:
 
-- **Credenciales hardcodeadas**: API keys, passwords, tokens, secrets
-- **Inyección**: SQL injection, command injection, XSS
-- **Inputs no validados**: datos de usuario usados sin sanitizar
-- **Exposición de datos sensibles**: logs con información privada
-- **Configuraciones inseguras**: CORS permisivo, HTTPS deshabilitado
-- **Dependencias vulnerables**: si se modificó package.json/requirements.txt
+- **Hardcoded credentials**: API keys, passwords, tokens, secrets
+- **Injection**: SQL injection, command injection, XSS
+- **Unvalidated inputs**: user data used without sanitization
+- **Sensitive data exposure**: logs with private information
+- **Insecure configurations**: permissive CORS, disabled HTTPS
+- **Vulnerable dependencies**: if package.json/requirements.txt was modified
 
-#### Inyecciones por lenguaje:
+#### Injections by language:
 
-| Lenguaje | SQL Injection | Command Injection | XSS |
-|----------|--------------|-------------------|-----|
-| JS/TS | Template strings en queries | `exec(cmd + input)` | `innerHTML = input` |
-| Python | f-strings en queries | `os.system(f"cmd {input}")` | N/A |
-| Go | Concatenación en queries | `exec.Command("sh", "-c", input)` | `template.HTML()` |
-| Rust | format! en queries | N/A | N/A |
-| PHP | Concatenación en queries | `system($input)` | `echo $_GET['x']` |
+| Language | SQL Injection | Command Injection | XSS |
+|----------|---------------|-------------------|-----|
+| JS/TS | Template strings in queries | `exec(cmd + input)` | `innerHTML = input` |
+| Python | f-strings in queries | `os.system(f"cmd {input}")` | N/A |
+| Go | Concatenation in queries | `exec.Command("sh", "-c", input)` | `template.HTML()` |
+| Rust | format! in queries | N/A | N/A |
+| PHP | Concatenation in queries | `system($input)` | `echo $_GET['x']` |
 
 ---
 
-### 🟠 P1 - ALTO: Problemas de Rendimiento
+### P1 - HIGH: Performance Issues
 
-Código que degradará la experiencia del usuario:
+Code that will degrade user experience:
 
-- **Operaciones O(n²) o peores** donde existe solución O(n)
-- **Queries N+1**: múltiples llamadas a DB/API en loops
-- **Operaciones bloqueantes** en código que debería ser async
-- **Cálculos costosos** repetidos sin memoización
-- **Re-renders innecesarios** en componentes React
-- **Bundles inflados**: imports que traen librerías completas
-- **Falta de paginación** en listas potencialmente grandes
+- **O(n²) or worse operations** where O(n) solution exists
+- **N+1 queries**: multiple DB/API calls in loops
+- **Blocking operations** in code that should be async
+- **Expensive calculations** repeated without memoization
+- **Unnecessary re-renders** in React components
+- **Bloated bundles**: imports that bring entire libraries
+- **Missing pagination** in potentially large lists
 
-#### Problemas comunes por lenguaje:
+#### Common problems by language:
 
-| Lenguaje | Problema común | Solución |
+| Language | Common problem | Solution |
 |----------|----------------|----------|
-| JS/TS | await en loop | Promise.all |
-| Python | list concat en loop | ''.join() |
-| Go | append sin pre-allocate | make([]T, 0, cap) |
-| Rust | .clone() innecesario | usar referencias |
-| PHP | query en loop | whereIn() |
+| JS/TS | await in loop | Promise.all |
+| Python | list concat in loop | ''.join() |
+| Go | append without pre-allocate | make([]T, 0, cap) |
+| Rust | unnecessary .clone() | use references |
+| PHP | query in loop | whereIn() |
 
 ---
 
-### 🟠 P1 - ALTO: Errores de Tipado y Contratos
+### P1 - HIGH: Typing and Contract Errors
 
-Problemas que causarán bugs sutiles:
+Problems that will cause subtle bugs:
 
-| Lenguaje | Problema | Solución |
-|----------|----------|----------|
-| TypeScript | any implícito | tipos explícitos |
-| Python | sin type hints | agregar hints |
-| Go | interface{} sin check | type assertion con ok |
-| PHP | sin type declarations | PHP 7+ types |
+| Language | Problem | Solution |
+|----------|---------|----------|
+| TypeScript | implicit any | explicit types |
+| Python | no type hints | add hints |
+| Go | interface{} without check | type assertion with ok |
+| PHP | no type declarations | PHP 7+ types |
 
-- **Any implícitos** o casteos forzados sin validación
-- **Tipos opcionales** usados sin verificar existencia
-- **Interfaces incompletas** que no reflejan la realidad
-- **Parámetros con tipos incorrectos** en llamadas a funciones
-- **Return types inconsistentes** con lo que realmente retorna
-
----
-
-### 🟡 P2 - MEDIO: Calidad y Mantenibilidad
-
-Código que dificultará el trabajo futuro:
-
-- **Código duplicado**: bloques repetidos que deberían extraerse (>5 líneas)
-- **Funciones demasiado largas** (>50 líneas): difíciles de entender y testear
-- **Anidamiento excesivo** (>3 niveles): complejidad cognitiva alta
-- **Ternarios anidados**: preferir switch/if-else para claridad
-- **Nombres poco descriptivos**: variables de una letra, abreviaciones crípticas
-- **Magic numbers/strings**: valores sin explicación ni constantes
-- **Comentarios desactualizados**: peor que no tener comentarios
-- **Acoplamiento alto**: dependencias circulares, módulos que saben demasiado
+- **Implicit any** or forced casts without validation
+- **Optional types** used without checking existence
+- **Incomplete interfaces** that don't reflect reality
+- **Parameters with incorrect types** in function calls
+- **Inconsistent return types** with what's actually returned
 
 ---
 
-### 🟡 P2 - MEDIO: Violaciones de Estándares del Proyecto
+### P2 - MEDIUM: Quality and Maintainability
 
-Si existe CLAUDE.md, AGENTS.md o configuración de linting, verifica:
+Code that will make future work difficult:
 
-- **Imports desordenados** o sin extensiones (si el proyecto las requiere)
-- **Arrow functions** donde se espera `function` keyword (o viceversa)
-- **Falta de return types** explícitos en funciones públicas
-- **Componentes React** sin Props types definidos
-- **Patrones de error handling** inconsistentes con el resto del código
-- **Convenciones de naming** no seguidas
+- **Duplicate code**: repeated blocks that should be extracted (>5 lines)
+- **Functions too long** (>50 lines): hard to understand and test
+- **Excessive nesting** (>3 levels): high cognitive complexity
+- **Nested ternaries**: prefer switch/if-else for clarity
+- **Non-descriptive names**: single-letter variables, cryptic abbreviations
+- **Magic numbers/strings**: values without explanation or constants
+- **Outdated comments**: worse than having no comments
+- **High coupling**: circular dependencies, modules that know too much
 
 ---
 
-### 🔵 P3 - BAJO: Código Basura y Limpieza
+### P2 - MEDIUM: Project Standards Violations
 
-Ruido que debería eliminarse antes del commit:
+If CLAUDE.md, AGENTS.md or linting configuration exists, verify:
 
-| Lenguaje | Debugging a remover |
+- **Unordered imports** or without extensions (if the project requires them)
+- **Arrow functions** where `function` keyword is expected (or vice versa)
+- **Missing return types** on public functions
+- **React components** without defined Props types
+- **Error handling patterns** inconsistent with rest of code
+- **Naming conventions** not followed
+
+---
+
+### P3 - LOW: Code Trash and Cleanup
+
+Noise that should be removed before commit:
+
+| Language | Debugging to remove |
 |----------|---------------------|
 | JS/TS | `console.log`, `debugger` |
 | Python | `print()`, `breakpoint()` |
@@ -195,113 +195,113 @@ Ruido que debería eliminarse antes del commit:
 | PHP | `var_dump()`, `dd()` |
 | Ruby | `puts`, `binding.pry` |
 
-- **Código comentado**: si no sirve, se borra; Git guarda el historial
-- **Variables declaradas sin usar**: dead code
-- **Imports no utilizados**: inflan el bundle innecesariamente
-- **TODOs obsoletos**: sin fecha ni owner, nunca se resuelven
-- **Funciones muertas**: nunca llamadas desde ningún lugar
-- **Archivos vacíos o placeholder**: si no tienen contenido útil
+- **Commented code**: if not useful, delete it; Git keeps history
+- **Declared unused variables**: dead code
+- **Unused imports**: bloat the bundle unnecessarily
+- **Obsolete TODOs**: without date or owner, never get resolved
+- **Dead functions**: never called from anywhere
+- **Empty or placeholder files**: if they don't have useful content
 
 ---
 
-### 🔵 P3 - BAJO: Oportunidades de Simplificación
+### P3 - LOW: Simplification Opportunities
 
-Mejoras opcionales que aumentan la elegancia:
+Optional improvements that increase elegance:
 
-- **Lógica que puede simplificarse** sin perder claridad
-- **Abstracciones que pueden consolidarse**
-- **Patrones modernos** disponibles (optional chaining, nullish coalescing)
-- **Utilidades existentes** en el proyecto que podrían reutilizarse
+- **Logic that can be simplified** without losing clarity
+- **Abstractions that can be consolidated**
+- **Modern patterns** available (optional chaining, nullish coalescing)
+- **Existing utilities** in the project that could be reused
 
 ---
 
-## Paso 4: Generar Informe
+## Step 4: Generate Report
 
-Usa este formato exacto:
+Use this exact format:
 
 ```markdown
-# 📋 INFORME DE REVISIÓN BRO PRE-COMMIT
+# BRO PRE-COMMIT REVIEW REPORT
 
-**Fecha:** [fecha actual]
-**Branch:** [nombre del branch]
-**Lenguaje(s):** [detectados]
-**Archivos analizados:** [número]
-**Líneas modificadas:** ~[número aproximado]
-
----
-
-## Resumen Ejecutivo
-
-| Severidad | Cantidad | Descripción |
-|-----------|----------|-------------|
-| 🔴 P0 Crítico | X | Bugs y seguridad - BLOQUEAN el commit |
-| 🟠 P1 Alto | X | Rendimiento y tipos - Deberían corregirse |
-| 🟡 P2 Medio | X | Calidad - Recomendado corregir |
-| 🔵 P3 Bajo | X | Limpieza - Opcional |
-
-**Veredicto:** [✅ APROBADO | ⚠️ CON OBSERVACIONES | ❌ RECHAZADO]
+**Date:** [current date]
+**Branch:** [branch name]
+**Language(s):** [detected]
+**Files analyzed:** [number]
+**Lines modified:** ~[approximate number]
 
 ---
 
-## Hallazgos Detallados
+## Executive Summary
 
-### 📁 [ruta/al/archivo.ext]
+| Severity | Count | Description |
+|----------|-------|-------------|
+| P0 Critical | X | Bugs and security - BLOCK the commit |
+| P1 High | X | Performance and types - Should be fixed |
+| P2 Medium | X | Quality - Recommended to fix |
+| P3 Low | X | Cleanup - Optional |
 
-#### 🔴 P0: [Título descriptivo del problema]
+**Verdict:** [APPROVED | WITH OBSERVATIONS | REJECTED]
 
-**Líneas:** XX-XX
-**Categoría:** [Bug | Seguridad | Rendimiento | Tipos | Calidad | Limpieza]
+---
 
-**Problema:**
-[Descripción clara de qué está mal]
+## Detailed Findings
 
-**Código actual:**
-```[lenguaje]
-[fragmento problemático con contexto suficiente]
+### [path/to/file.ext]
+
+#### P0: [Descriptive problem title]
+
+**Lines:** XX-XX
+**Category:** [Bug | Security | Performance | Types | Quality | Cleanup]
+
+**Problem:**
+[Clear description of what's wrong]
+
+**Current code:**
+```[language]
+[problematic snippet with sufficient context]
 ```
 
-**Corrección sugerida:**
-```[lenguaje]
-[código corregido]
+**Suggested fix:**
+```[language]
+[corrected code]
 ```
 
-**Impacto si no se corrige:**
-[Descripción concreta del escenario de fallo: qué pasará, bajo qué condiciones, qué consecuencias tendrá para usuarios/sistema]
+**Impact if not fixed:**
+[Concrete description of failure scenario: what will happen, under what conditions, what consequences for users/system]
 
 ---
 
-[Repetir para cada hallazgo, agrupados por archivo]
+[Repeat for each finding, grouped by file]
 
 ---
 
-## Checklist Pre-Commit
+## Pre-Commit Checklist
 
-- [ ] Todos los P0 (críticos) están resueltos
-- [ ] Los P1 (altos) están resueltos o tienen justificación
-- [ ] No hay credenciales o datos sensibles
-- [ ] No hay código de debugging (console.log, debugger)
-- [ ] Los tests pasan (si aplica)
-- [ ] El código compila sin errores
+- [ ] All P0 (critical) are resolved
+- [ ] P1 (high) are resolved or have justification
+- [ ] No credentials or sensitive data
+- [ ] No debugging code (console.log, debugger)
+- [ ] Tests pass (if applicable)
+- [ ] Code compiles without errors
 
 ---
 
-## Recomendaciones Finales
+## Final Recommendations
 
-[Lista breve de acciones prioritarias antes de hacer commit]
+[Brief list of priority actions before committing]
 ```
 
 ---
 
-## Reglas de Operación
+## Operating Rules
 
-1. **Sé específico**: Indica líneas exactas, muestra código concreto, no generalices
-2. **Detecta el lenguaje**: Adapta análisis y ejemplos al lenguaje del proyecto
-3. **Prioriza correctamente**: Un bug crítico importa más que 10 mejoras de estilo
-4. **Explica el impacto real**: No digas "puede causar problemas", describe el escenario exacto
-5. **Propón soluciones idiomáticas**: Patrones del lenguaje detectado
-6. **Evita falsos positivos**: Si no estás seguro, márcalo como "posible problema a verificar"
-7. **Contexto importa**: Código de tests tiene reglas diferentes a producción
-8. **Preserva funcionalidad**: Las sugerencias de mejora nunca deben cambiar el comportamiento
-9. **Claridad sobre brevedad**: Código explícito es mejor que one-liners crípticos
-10. **Respeta los estándares del proyecto**: Si existe CLAUDE.md, AGENTS.md o linting config, síguelo
-11. **Sé pragmático**: No todo necesita ser perfecto, enfócate en lo que realmente importa
+1. **Be specific**: Indicate exact lines, show concrete code, don't generalize
+2. **Detect the language**: Adapt analysis and examples to the project's language
+3. **Prioritize correctly**: A critical bug matters more than 10 style improvements
+4. **Explain real impact**: Don't say "may cause problems", describe the exact scenario
+5. **Propose idiomatic solutions**: Patterns of the detected language
+6. **Avoid false positives**: If unsure, mark as "possible issue to verify"
+7. **Context matters**: Test code has different rules than production
+8. **Preserve functionality**: Improvement suggestions should never change behavior
+9. **Clarity over brevity**: Explicit code is better than cryptic one-liners
+10. **Respect project standards**: If CLAUDE.md, AGENTS.md or linting config exists, follow it
+11. **Be pragmatic**: Not everything needs to be perfect, focus on what really matters

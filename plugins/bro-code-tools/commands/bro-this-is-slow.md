@@ -1,75 +1,75 @@
 ---
 name: bro-this-is-slow
-description: Detecta problemas de rendimiento - queries lentas, memory leaks, bundle size, lazy loading, algoritmos ineficientes. Soporta múltiples lenguajes. Solo lectura.
+description: Detects performance problems - slow queries, memory leaks, bundle size, lazy loading, inefficient algorithms. Multi-language support. Read-only.
 model: opus
 allowed-tools: ["Bash(read-only)", "Read", "Grep", "Glob"]
 ---
 
-# Auditoría de Rendimiento
+# Performance Audit
 
-Analiza el código en busca de problemas de rendimiento y oportunidades de optimización. **Solo lectura, no modifica nada. Soporta múltiples lenguajes.**
+Analyze code for performance issues and optimization opportunities. **Read-only, doesn't modify anything. Multi-language support.**
 
-## Entrada del Usuario
+## User Input
 
-El usuario puede especificar qué auditar de varias formas:
+The user can specify what to audit in various ways:
 
-**Ruta exacta:**
+**Exact path:**
 - `/bro-this-is-slow src/`
 - `/bro-this-is-slow src/services/dataService.ts`
 - `/bro-this-is-slow app/handlers/`
 
-**Lenguaje natural (ejemplos ilustrativos):**
-- `/bro-this-is-slow analiza rendimiento de <módulo>`
-- `/bro-this-is-slow busca memory leaks en <área>`
-- `/bro-this-is-slow revisa queries en <servicio>`
-- `/bro-this-is-slow optimizaciones para <componente>`
-- `/bro-this-is-slow por qué es lento <funcionalidad>`
+**Natural language (illustrative examples):**
+- `/bro-this-is-slow analyze performance of <module>`
+- `/bro-this-is-slow find memory leaks in <area>`
+- `/bro-this-is-slow review queries in <service>`
+- `/bro-this-is-slow optimizations for <component>`
+- `/bro-this-is-slow why is <feature> slow`
 
-**Sin argumentos:**
-- `/bro-this-is-slow` → audita todo el proyecto
+**No arguments:**
+- `/bro-this-is-slow` → audits the entire project
 
-> **Nota:** Los términos como "API", "dashboard", "reportes" son solo ejemplos. Interpreta lo que el usuario solicite y busca los archivos correspondientes en el proyecto.
+> **Note:** Terms like "API", "dashboard", "reports" are just examples. Interpret what the user requests and search for the corresponding files in the project.
 
 ---
 
-## Paso 1: Interpretar la Solicitud
+## Step 1: Interpret the Request
 
-### Si es ruta exacta:
-Usar directamente.
+### If it's an exact path:
+Use directly.
 
-### Si es lenguaje natural:
-Buscar archivos que coincidan con la descripción:
+### If it's natural language:
+Search for files matching the description:
 
 ```bash
-# Explorar estructura del proyecto
+# Explore project structure
 find . -type f \( -name "*.ts" -o -name "*.tsx" -o -name "*.js" -o -name "*.jsx" -o -name "*.py" -o -name "*.go" -o -name "*.rs" -o -name "*.java" \) \
   ! -path "*/node_modules/*" ! -path "*/.git/*" ! -path "*/dist/*" ! -path "*/build/*" ! -path "*/target/*"
 
-# Buscar por nombre relacionado
-find . -type f -iname "*<término>*" | grep -v node_modules
-find . -type d -iname "*<término>*" | grep -v node_modules
+# Search by related name
+find . -type f -iname "*<term>*" | grep -v node_modules
+find . -type d -iname "*<term>*" | grep -v node_modules
 
-# Buscar contenido relacionado
-grep -ril "<término>" --include="*.ts" --include="*.tsx" --include="*.js" --include="*.py" --include="*.go" | grep -v node_modules | head -30
+# Search related content
+grep -ril "<term>" --include="*.ts" --include="*.tsx" --include="*.js" --include="*.py" --include="*.go" | grep -v node_modules | head -30
 ```
 
-**Confirma con el usuario** si encuentras múltiples coincidencias.
+**Confirm with the user** if you find multiple matches.
 
-**Límite:** Máximo 100 archivos. Si hay más, pide acotar o prioriza por riesgo.
+**Limit:** Maximum 100 files. If there are more, ask to narrow down or prioritize by risk.
 
 ---
 
-## Paso 2: Contexto del Proyecto
+## Step 2: Project Context
 
 ```bash
-# Estándares y guías
+# Standards and guides
 cat CLAUDE.md 2>/dev/null
 cat AGENTS.md 2>/dev/null
 
-# Detectar stack
+# Detect stack
 cat package.json pyproject.toml go.mod Cargo.toml composer.json 2>/dev/null
 
-# Configuración de build y bundle
+# Build and bundle configuration
 cat webpack.config.js 2>/dev/null
 cat vite.config.ts 2>/dev/null
 cat next.config.js 2>/dev/null
@@ -78,75 +78,75 @@ cat tsconfig.json 2>/dev/null
 
 ---
 
-## Paso 3: Leer y Analizar
+## Step 3: Read and Analyze
 
 ```bash
-cat [archivo]
-wc -l [archivo]
+cat [file]
+wc -l [file]
 ```
 
-Lee cada archivo y realiza el análisis de rendimiento completo.
+Read each file and perform the complete performance analysis.
 
 ---
 
-## Paso 4: Análisis por Categorías
+## Step 4: Analysis by Categories
 
-### 🔴 P0 - CRÍTICO: Bloqueos y Crashes
+### P0 - CRITICAL: Blocks and Crashes
 
-Problemas que causan degradación severa:
+Problems that cause severe degradation:
 
-- **Loops infinitos** o condiciones de salida incorrectas
-- **Operaciones síncronas bloqueantes** en código async
-- **Memory leaks** evidentes (listeners sin remover, closures que retienen referencias)
-- **Recursión sin límite** o caso base incorrecto
-- **Deadlocks** en código concurrente
+- **Infinite loops** or incorrect exit conditions
+- **Synchronous blocking operations** in async code
+- **Obvious memory leaks** (listeners not removed, closures retaining references)
+- **Unlimited recursion** or incorrect base case
+- **Deadlocks** in concurrent code
 
-#### Ejemplos por lenguaje:
+#### Examples by language:
 
 **JavaScript/TypeScript:**
 ```javascript
-// ❌ Operación síncrona bloqueante
+// ❌ Synchronous blocking operation
 const data = fs.readFileSync('huge-file.json')
 
-// ❌ Loop infinito potencial
-while (condition) { /* sin break */ }
+// ❌ Potential infinite loop
+while (condition) { /* without break */ }
 ```
 
 **Python:**
 ```python
-# ❌ Carga todo en memoria
-data = file.read()  # archivo de 10GB
+# ❌ Loads everything in memory
+data = file.read()  # 10GB file
 
-# ❌ Recursión sin límite
+# ❌ Unlimited recursion
 def recursive(n):
-    return recursive(n)  # sin caso base
+    return recursive(n)  # no base case
 ```
 
 **Go:**
 ```go
 // ❌ Goroutine leak
 go func() {
-    for { /* sin salida */ }
+    for { /* no exit */ }
 }()
 
 // ❌ Deadlock
 mu.Lock()
-mu.Lock()  // mismo mutex
+mu.Lock()  // same mutex
 ```
 
 **Rust:**
 ```rust
-// ❌ Loop sin salida
-loop { /* sin break */ }
+// ❌ Loop without exit
+loop { /* without break */ }
 ```
 
 ---
 
-### 🟠 P1 - ALTO: Algoritmos Ineficientes
+### P1 - HIGH: Inefficient Algorithms
 
-Problemas de complejidad algorítmica.
+Algorithmic complexity problems.
 
-#### O(n²) → O(n) por lenguaje:
+#### O(n²) → O(n) by language:
 
 **JavaScript/TypeScript:**
 ```javascript
@@ -197,7 +197,7 @@ let set: HashSet<_> = vec2.iter().collect();
 
 ---
 
-### 🟠 P1 - ALTO: Queries N+1
+### P1 - HIGH: N+1 Queries
 
 **JavaScript/TypeScript:**
 ```javascript
@@ -235,7 +235,7 @@ db.Query("SELECT * FROM orders WHERE user_id IN (?)", userIDs)
 
 ---
 
-### 🟠 P1 - ALTO: Memory Leaks
+### P1 - HIGH: Memory Leaks
 
 **JavaScript/TypeScript:**
 ```javascript
@@ -244,7 +244,7 @@ useEffect(() => {
     window.addEventListener('resize', handler)
 }, [])
 
-// ✅ Con cleanup
+// ✅ With cleanup
 useEffect(() => {
     window.addEventListener('resize', handler)
     return () => window.removeEventListener('resize', handler)
@@ -253,7 +253,7 @@ useEffect(() => {
 
 **Python:**
 ```python
-# ❌ Conexión no cerrada
+# ❌ Connection not closed
 conn = psycopg2.connect(...)
 cursor = conn.cursor()
 
@@ -267,10 +267,10 @@ with psycopg2.connect(...) as conn:
 ```go
 // ❌ Goroutine leak
 go func() {
-    for { <-ch }  // ch nunca cierra
+    for { <-ch }  // ch never closes
 }()
 
-// ✅ Con context
+// ✅ With context
 go func(ctx context.Context) {
     for {
         select {
@@ -283,98 +283,98 @@ go func(ctx context.Context) {
 
 ---
 
-### 🟡 P2 - MEDIO: String Concatenation
+### P2 - MEDIUM: String Concatenation
 
-| Lenguaje | ❌ Malo (en loop) | ✅ Bueno |
-|----------|------------------|---------|
+| Language | ❌ Bad (in loop) | ✅ Good |
+|----------|-----------------|---------|
 | JS/TS | `result += str` | `parts.join('')` |
 | Python | `result += s` | `''.join(strings)` |
 | Go | `result += s` | `strings.Builder` |
-| Rust | múltiples `push_str` | `String::with_capacity` |
+| Rust | multiple `push_str` | `String::with_capacity` |
 | Java | `result += s` | `StringBuilder` |
 
 ---
 
-### 🟡 P2 - MEDIO: Falta de Memoización
+### P2 - MEDIUM: Missing Memoization
 
 **JavaScript/TypeScript:**
 ```javascript
-// ❌ Recalcula cada render
+// ❌ Recalculates every render
 const sorted = items.sort(...)
 
-// ✅ Memoizado
+// ✅ Memoized
 const sorted = useMemo(() => [...items].sort(...), [items])
 ```
 
 **Python:**
 ```python
-# ❌ Recalcula siempre
+# ❌ Always recalculates
 def expensive(n): return sum(range(n))
 
-# ✅ Con cache
+# ✅ With cache
 @lru_cache(maxsize=128)
 def expensive(n): return sum(range(n))
 ```
 
 ---
 
-### 🟡 P2 - MEDIO: Imports Pesados
+### P2 - MEDIUM: Heavy Imports
 
 ```javascript
-// ❌ Import completo
+// ❌ Full import
 import _ from 'lodash'        // ~70KB
 import moment from 'moment'   // ~300KB
 
-// ✅ Import específico
+// ✅ Specific import
 import debounce from 'lodash/debounce'
 import { format } from 'date-fns'
 ```
 
 ---
 
-### 🟡 P2 - MEDIO: Problemas de Frontend
+### P2 - MEDIUM: Frontend Problems
 
-#### Re-renders innecesarios
+#### Unnecessary re-renders
 ```javascript
-// ❌ Malo: nuevo objeto en cada render
+// ❌ Bad: new object every render
 <Component style={{ margin: 10 }} />
 <Component onClick={() => handleClick(id)} />
 
-// ✅ Mejor: memoizar
+// ✅ Better: memoize
 const style = useMemo(() => ({ margin: 10 }), []);
 const handleClickMemo = useCallback(() => handleClick(id), [id]);
 ```
 
-#### Falta de virtualización en listas largas
+#### Missing virtualization in long lists
 ```javascript
-// ❌ Malo: renderiza 10,000 items
+// ❌ Bad: renders 10,000 items
 {items.map(item => <Row key={item.id} {...item} />)}
 
-// ✅ Mejor: virtualizar
+// ✅ Better: virtualize
 <VirtualList items={items} renderItem={item => <Row {...item} />} />
 ```
 
-#### Falta de lazy loading
+#### Missing lazy loading
 ```javascript
-// ❌ Malo: importa todo upfront
+// ❌ Bad: imports everything upfront
 import HeavyComponent from './HeavyComponent';
 
-// ✅ Mejor: lazy load
+// ✅ Better: lazy load
 const HeavyComponent = lazy(() => import('./HeavyComponent'));
 ```
 
 ---
 
-### 🟡 P2 - MEDIO: Problemas de Backend
+### P2 - MEDIUM: Backend Problems
 
-#### Falta de caching
+#### Missing caching
 ```javascript
-// ❌ Malo: siempre calcula/fetch
+// ❌ Bad: always calculates/fetches
 async function getConfig() {
   return await db.query('SELECT * FROM config');
 }
 
-// ✅ Mejor: cachear
+// ✅ Better: cache
 let configCache = null;
 async function getConfig() {
   if (!configCache) {
@@ -384,9 +384,9 @@ async function getConfig() {
 }
 ```
 
-#### Falta de connection pooling
+#### Missing connection pooling
 ```javascript
-// ❌ Malo: nueva conexión por request
+// ❌ Bad: new connection per request
 async function query(sql) {
   const conn = await mysql.createConnection(config);
   const result = await conn.query(sql);
@@ -394,7 +394,7 @@ async function query(sql) {
   return result;
 }
 
-// ✅ Mejor: pool
+// ✅ Better: pool
 const pool = mysql.createPool(config);
 async function query(sql) {
   return pool.query(sql);
@@ -403,169 +403,169 @@ async function query(sql) {
 
 ---
 
-### 🔵 P3 - BAJO: Micro-optimizaciones
+### P3 - LOW: Micro-optimizations
 
-- Console/print en loops
-- Regex compilado en cada llamada
-- Spread/clone innecesario
-- Async/await en operaciones síncronas
+- Console/print in loops
+- Regex compiled on every call
+- Unnecessary spread/clone
+- Async/await on synchronous operations
 
-| Lenguaje | Debugging a remover |
+| Language | Debugging to remove |
 |----------|---------------------|
-| JS/TS | `console.log` en loops |
-| Python | `print()` en loops |
+| JS/TS | `console.log` in loops |
+| Python | `print()` in loops |
 | Go | `fmt.Println` debug |
 | Rust | `println!`, `dbg!` |
 
 ---
 
-## Paso 5: Generar Informe
+## Step 5: Generate Report
 
-**Responde directamente en el chat:**
+**Respond directly in the chat:**
 
 ```markdown
-# ⚡ INFORME DE RENDIMIENTO BRO
+# BRO PERFORMANCE REPORT
 
-**Fecha:** [fecha actual]
-**Alcance:** `[ruta, descripción o "proyecto completo"]`
-**Lenguaje(s):** [detectados]
-**Archivos analizados:** [número]
-**Líneas de código:** ~[número]
-
----
-
-## Resumen Ejecutivo
-
-| Severidad | Cantidad | Impacto Estimado |
-|-----------|----------|------------------|
-| 🔴 P0 Crítico | X | Bloqueos/Crashes |
-| 🟠 P1 Alto | X | Degradación severa |
-| 🟡 P2 Medio | X | Lentitud notable |
-| 🔵 P3 Bajo | X | Micro-optimizaciones |
-
-**Estado de rendimiento:** [🔴 Crítico | 🟠 Necesita trabajo | 🟡 Aceptable | 🟢 Optimizado]
-
-### Áreas Más Afectadas
-1. [Área] — [cantidad] problemas
-2. [Área] — [cantidad] problemas
+**Date:** [current date]
+**Scope:** `[path, description or "entire project"]`
+**Language(s):** [detected]
+**Files analyzed:** [number]
+**Lines of code:** ~[number]
 
 ---
 
-## 🔴 Problemas Críticos (P0)
+## Executive Summary
 
-### PERF-001: [Título descriptivo]
+| Severity | Count | Estimated Impact |
+|----------|-------|------------------|
+| P0 Critical | X | Blocks/Crashes |
+| P1 High | X | Severe degradation |
+| P2 Medium | X | Notable slowness |
+| P3 Low | X | Micro-optimizations |
 
-**Categoría:** [Memory Leak | Loop Infinito | Bloqueo | etc.]
-**Severidad:** 🔴 Crítica
-**Impacto estimado:** [Descripción del impacto]
+**Performance status:** [Critical | Needs work | Acceptable | Optimized]
 
-**Ubicación:**
-- Archivo: `path/to/file.ts`
-- Línea(s): XX-XX
-- Función: `[nombre]`
+### Most Affected Areas
+1. [Area] — [count] issues
+2. [Area] — [count] issues
 
-**Código actual:**
+---
+
+## Critical Problems (P0)
+
+### PERF-001: [Descriptive title]
+
+**Category:** [Memory Leak | Infinite Loop | Block | etc.]
+**Severity:** Critical
+**Estimated impact:** [Impact description]
+
+**Location:**
+- File: `path/to/file.ts`
+- Line(s): XX-XX
+- Function: `[name]`
+
+**Current code:**
 ```[lang]
-[fragmento problemático]
+[problematic snippet]
 ```
 
-**Problema:**
-[Explicación de por qué es un problema de rendimiento]
+**Problem:**
+[Explanation of why this is a performance problem]
 
-**Solución sugerida:**
+**Suggested solution:**
 ```[lang]
-[código optimizado]
+[optimized code]
 ```
 
-**Mejora esperada:** [Descripción cuantitativa si es posible]
+**Expected improvement:** [Quantitative description if possible]
 
 ---
 
-[Repetir para cada problema, agrupados por severidad]
+[Repeat for each problem, grouped by severity]
 
 ---
 
-## 🟠 Problemas Altos (P1)
+## High Problems (P1)
 
 ### PERF-002: ...
 
 ---
 
-## 🟡 Problemas Medios (P2)
+## Medium Problems (P2)
 
 ### PERF-003: ...
 
 ---
 
-## 🔵 Optimizaciones Menores (P3)
+## Minor Optimizations (P3)
 
 ### PERF-004: ...
 
 ---
 
-## 📊 Análisis por Categoría
+## Analysis by Category
 
-### 🗄️ Base de Datos
-| Problema | Ubicación | Severidad |
-|----------|-----------|-----------|
-| [N+1 Query] | `src/services/user.ts:45` | 🟠 |
-| [Sin índice] | `src/models/order.ts:23` | 🟡 |
+### Database
+| Problem | Location | Severity |
+|---------|----------|----------|
+| [N+1 Query] | `src/services/user.ts:45` | High |
+| [Missing index] | `src/models/order.ts:23` | Medium |
 
-### 🧠 Memoria
-| Problema | Ubicación | Severidad |
-|----------|-----------|-----------|
-| [Event listener leak] | `src/components/Chat.tsx:34` | 🔴 |
+### Memory
+| Problem | Location | Severity |
+|---------|----------|----------|
+| [Event listener leak] | `src/components/Chat.tsx:34` | Critical |
 
-### 🖥️ Frontend
-| Problema | Ubicación | Severidad |
-|----------|-----------|-----------|
-| [Re-renders] | `src/pages/Dashboard.tsx:67` | 🟡 |
+### Frontend
+| Problem | Location | Severity |
+|---------|----------|----------|
+| [Re-renders] | `src/pages/Dashboard.tsx:67` | Medium |
 
-### ⚙️ Backend
-| Problema | Ubicación | Severidad |
-|----------|-----------|-----------|
-| [Sin caching] | `src/api/config.ts:12` | 🟡 |
-
----
-
-## 📦 Análisis de Bundle (si aplica)
-
-### Dependencias Pesadas Detectadas
-| Paquete | Tamaño Est. | Uso | Alternativa |
-|---------|-------------|-----|-------------|
-| `moment` | ~300KB | Formateo fechas | `date-fns` (~30KB) |
-| `lodash` | ~70KB | 2 funciones | Import específico |
+### Backend
+| Problem | Location | Severity |
+|---------|----------|----------|
+| [Missing caching] | `src/api/config.ts:12` | Medium |
 
 ---
 
-## 📋 Plan de Optimización
+## Bundle Analysis (if applicable)
 
-### 🔴 Inmediato (esta semana)
-1. [Problema crítico] — Archivo: X — Impacto: [alto]
-2. [Problema crítico] — Archivo: Y — Impacto: [alto]
-
-### 🟠 Corto plazo (este mes)
-1. [Problema alto] — Archivo: X
-2. [Problema alto] — Archivo: Y
-
-### 🟡 Mediano plazo
-1. [Problema medio] — Archivo: X
-
-### 🔵 Backlog
-1. [Optimización menor]
+### Heavy Dependencies Detected
+| Package | Est. Size | Usage | Alternative |
+|---------|-----------|-------|-------------|
+| `moment` | ~300KB | Date formatting | `date-fns` (~30KB) |
+| `lodash` | ~70KB | 2 functions | Specific import |
 
 ---
 
-## ✨ Buenas Prácticas de Rendimiento Encontradas
+## Optimization Plan
 
-[Patrones positivos: uso correcto de memoización, lazy loading implementado, queries optimizadas, caching apropiado, etc.]
+### Immediate (this week)
+1. [Critical problem] — File: X — Impact: [high]
+2. [Critical problem] — File: Y — Impact: [high]
+
+### Short term (this month)
+1. [High problem] — File: X
+2. [High problem] — File: Y
+
+### Medium term
+1. [Medium problem] — File: X
+
+### Backlog
+1. [Minor optimization]
 
 ---
 
-## 🛠️ Herramientas Recomendadas
+## Good Performance Practices Found
 
-| Lenguaje | Herramienta |
-|----------|-------------|
+[Positive patterns: correct use of memoization, lazy loading implemented, optimized queries, appropriate caching, etc.]
+
+---
+
+## Recommended Tools
+
+| Language | Tool |
+|----------|------|
 | JS/TS | Lighthouse, Bundle Analyzer, React DevTools Profiler |
 | Python | cProfile, py-spy |
 | Go | pprof |
@@ -574,18 +574,18 @@ async function query(sql) {
 
 ---
 
-## Reglas de Operación
+## Operating Rules
 
-1. **Solo lectura**: No modificar ningún archivo, solo analizar y reportar
-2. **Detecta el lenguaje**: Adapta patrones de análisis al lenguaje del proyecto
-3. **Interpreta inteligentemente**: Buscar archivos relacionados con lo que pida el usuario
-4. **Confirma si hay ambigüedad**: Si hay múltiples coincidencias, pregunta
-5. **Sé específico**: Indica archivos, líneas y código exacto
-6. **Cuantifica cuando sea posible**: "O(n²) en array de 10K items = ~100M operaciones"
-7. **Prioriza por impacto**: Bloqueos > Algoritmos > Memory > UI
-8. **Propón soluciones idiomáticas**: Cada problema debe tener código corregido
-9. **Evita falsos positivos**: No todo loop anidado es malo
-10. **Considera el contexto**: Un O(n²) con n=10 no es problema
-11. **Respeta estándares del proyecto**: Usa CLAUDE.md/AGENTS.md como referencia
-12. **Sugiere herramientas**: Para validar las mejoras
-13. **Reconoce lo bueno**: Menciona optimizaciones ya implementadas
+1. **Read-only**: Don't modify any files, only analyze and report
+2. **Detect the language**: Adapt analysis patterns to the project's language
+3. **Interpret intelligently**: Search for files related to what the user requests
+4. **Confirm if ambiguous**: If there are multiple matches, ask
+5. **Be specific**: Indicate exact files, lines and code
+6. **Quantify when possible**: "O(n²) on 10K item array = ~100M operations"
+7. **Prioritize by impact**: Blocks > Algorithms > Memory > UI
+8. **Propose idiomatic solutions**: Each problem must have corrected code
+9. **Avoid false positives**: Not every nested loop is bad
+10. **Consider context**: An O(n²) with n=10 isn't a problem
+11. **Respect project standards**: Use CLAUDE.md/AGENTS.md as reference
+12. **Suggest tools**: To validate improvements
+13. **Recognize the good**: Mention optimizations already implemented
