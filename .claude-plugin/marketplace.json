@@ -8,9 +8,9 @@
   },
   "plugins": [
     {
-      "name": "dinnovos-code-tools",
-      "source": "./plugins/dinnovos-code-tools",
-      "description": "Suite completa de análisis de código: review, seguridad, rendimiento, refactoring. Soporta JS/TS, Python, Go, Rust, PHP, Ruby, Java, C#"
+      "name": "bro-code-tools",
+      "source": "./plugins/bro-code-tools",
+      "description": "Hey bro! Suite de herramientas de código: review, seguridad, rendimiento, refactoring. Soporta JS/TS, Python, Go, Rust, PHP, Ruby, Java, C#"
     }
   ]
 }

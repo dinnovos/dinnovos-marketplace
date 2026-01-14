@@ -1,28 +1,28 @@
-# 🛠️ Dinnovos Code Tools - Claude Code Plugin Marketplace
+# 🤙 Bro Code Tools - Claude Code Plugin Marketplace
 
-Suite completa de herramientas de análisis de código para Claude Code.
+Hey bro! Suite de herramientas de análisis de código para Claude Code.
 
 ## ✨ Características
 
 - 🌐 **Políglota**: Soporta JavaScript/TypeScript, Python, Go, Rust, PHP, Ruby, Java, C#
 - 🔍 **Detección automática**: Identifica el lenguaje y adapta el análisis
 - 🛡️ **Análisis completo**: Code review, seguridad, rendimiento, refactoring
+- 💡 **Ideas creativas**: Genera ideas y soluciones con búsqueda web
 
 ---
 
-## 📦 Contenido del Plugin
-
-### Slash Commands (`/comando`)
+## 📦 Comandos Disponibles
 
 | Comando | Descripción |
 |---------|-------------|
-| `/dinnovos-auto-commit` | Crea commits automáticos con Conventional Commits |
-| `/dinnovos-pre-commit-review` | Auditoría de cambios antes del commit |
-| `/dinnovos-code-review` | Revisión completa de calidad de código |
-| `/dinnovos-security-scan` | Escaneo de seguridad (OWASP Top 10) |
-| `/dinnovos-performance-audit` | Detectar problemas de rendimiento |
-| `/dinnovos-refactor-analysis` | Encontrar oportunidades de refactorización |
-| `/dinnovos-codebase-explain` | Explicar arquitectura y flujos del proyecto |
+| `/bro-commit-this` | Crea commits automáticos con Conventional Commits |
+| `/bro-review-before-i-screw-up` | Auditoría de cambios antes del commit (no la cagues!) |
+| `/bro-review-this` | Revisión completa de calidad de código |
+| `/bro-is-this-safe` | Escaneo de seguridad (OWASP Top 10) |
+| `/bro-this-is-slow` | Detectar problemas de rendimiento |
+| `/bro-refactor-this` | Encontrar oportunidades de refactorización |
+| `/bro-explain-this` | Explicar arquitectura y flujos del proyecto |
+| `/bro-inspire-me` | Ideas creativas y soluciones a problemas |
 
 ---
 
@@ -37,7 +37,7 @@ Suite completa de herramientas de análisis de código para Claude Code.
 ### Paso 2: Instalar el Plugin
 
 ```bash
-/plugin install dinnovos-code-tools
+/plugin install bro-code-tools
 ```
 
 ### Verificar Instalación
@@ -52,25 +52,29 @@ Suite completa de herramientas de análisis de código para Claude Code.
 
 ```bash
 # Crear commit automático con mensaje descriptivo
-/dinnovos-auto-commit
+/bro-commit-this
 
-# Revisar cambios antes de commit
-/dinnovos-pre-commit-review
+# Revisar cambios antes de commit (no la cagues!)
+/bro-review-before-i-screw-up
 
 # Revisar código específico
-/dinnovos-code-review src/services/
+/bro-review-this src/services/
 
 # Escanear seguridad
-/dinnovos-security-scan src/api/
+/bro-is-this-safe src/api/
 
 # Auditar rendimiento
-/dinnovos-performance-audit
+/bro-this-is-slow
 
 # Buscar oportunidades de refactor
-/dinnovos-refactor-analysis
+/bro-refactor-this
 
 # Explicar arquitectura
-/dinnovos-codebase-explain
+/bro-explain-this
+
+# Generar ideas creativas o resolver problemas
+/bro-inspire-me mejorar el onboarding
+/bro-inspire-me el build tarda demasiado
 ```
 
 ---
@@ -78,17 +82,18 @@ Suite completa de herramientas de análisis de código para Claude Code.
 ## 📁 Estructura del Plugin
 
 ```
-dinnovos-code-tools/
+bro-code-tools/
 ├── .claude-plugin/
-│   └── plugin.json           # Manifest del plugin
-└── commands/                  # Slash commands
-    ├── dinnovos-auto-commit.md
-    ├── dinnovos-pre-commit-review.md
-    ├── dinnovos-code-review.md
-    ├── dinnovos-refactor-analysis.md
-    ├── dinnovos-security-scan.md
-    ├── dinnovos-codebase-explain.md
-    └── dinnovos-performance-audit.md
+│   └── plugin.json              # Manifest del plugin
+└── commands/                     # Slash commands
+    ├── bro-commit-this.md
+    ├── bro-review-before-i-screw-up.md
+    ├── bro-review-this.md
+    ├── bro-is-this-safe.md
+    ├── bro-this-is-slow.md
+    ├── bro-refactor-this.md
+    ├── bro-explain-this.md
+    └── bro-inspire-me.md
 ```
 
 ---
@@ -112,7 +117,7 @@ dinnovos-code-tools/
 
 ```bash
 /plugin marketplace update dinnovos/dinnovos-marketplace
-/plugin update dinnovos-code-tools
+/plugin update bro-code-tools
 ```
 
 ---
@@ -120,7 +125,7 @@ dinnovos-code-tools/
 ## 🗑️ Desinstalación
 
 ```bash
-/plugin remove dinnovos-code-tools
+/plugin remove bro-code-tools
 /plugin marketplace remove dinnovos/dinnovos-marketplace
 ```
 

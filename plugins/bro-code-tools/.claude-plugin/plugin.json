@@ -1,0 +1,25 @@
+{
+  "name": "bro-code-tools",
+  "version": "1.0.0",
+  "description": "Hey bro! Suite de herramientas de código para Claude Code. Code review, security, performance, refactoring y más. Soporta JS/TS, Python, Go, Rust, PHP, Ruby, Java, C#.",
+  "author": {
+    "name": "Dinnovos",
+    "email": "pycodeve@gmail.com",
+    "url": "https://github.com/dinnovos"
+  },
+  "license": "MIT",
+  "keywords": [
+    "code-review",
+    "security",
+    "performance",
+    "refactoring",
+    "analysis",
+    "architecture",
+    "testing",
+    "polyglot",
+    "typescript",
+    "python",
+    "golang",
+    "rust"
+  ]
+}
