@@ -50,32 +50,149 @@ Hey bro! Code analysis tools suite for Claude Code.
 
 ## 🎯 Usage
 
+### 📝 `/bro-commit-this`
+Create automatic commits with Conventional Commits format.
+
 ```bash
-# Create automatic commit with descriptive message
 /bro-commit-this
+```
 
-# Review changes before commit (don't screw up!)
+Analyzes your changes and generates descriptive messages like:
+- `feat(auth): add Google OAuth login`
+- `fix(api): resolve timeout on large file uploads`
+- `refactor(db)!: migrate from MySQL to PostgreSQL`
+
+---
+
+### 🙏 `/bro-review-before-i-screw-up`
+Complete audit of pending changes before commit. Don't screw up!
+
+```bash
 /bro-review-before-i-screw-up
+```
 
-# Review specific code
+Detects bugs, security issues, performance problems, and quality issues in your staged changes before you commit them.
+
+---
+
+### 🔍 `/bro-review-this`
+Complete code quality review.
+
+```bash
+# Review a specific folder
 /bro-review-this src/services/
 
-# Security scan
+# Review a specific file
+/bro-review-this src/components/Button.tsx
+
+# Review the entire project
+/bro-review-this
+
+# Natural language
+/bro-review-this review the authentication module
+/bro-review-this analyze the payment services
+```
+
+---
+
+### 🔐 `/bro-is-this-safe`
+Security scan based on OWASP Top 10.
+
+```bash
+# Scan a specific module
 /bro-is-this-safe src/api/
 
-# Performance audit
+# Scan authentication code
+/bro-is-this-safe src/auth/
+
+# Scan entire project
+/bro-is-this-safe
+
+# Natural language
+/bro-is-this-safe check security in user registration
+/bro-is-this-safe look for secrets in config files
+```
+
+Detects SQL injection, XSS, hardcoded credentials, insecure configurations, and more.
+
+---
+
+### 🐢 `/bro-this-is-slow`
+Detect performance problems.
+
+```bash
+# Audit a specific service
+/bro-this-is-slow src/services/dataService.ts
+
+# Audit entire project
 /bro-this-is-slow
 
-# Find refactoring opportunities
+# Natural language
+/bro-this-is-slow why is the dashboard slow
+/bro-this-is-slow find memory leaks in the chat module
+/bro-this-is-slow analyze database queries
+```
+
+Finds N+1 queries, O(n²) algorithms, memory leaks, missing memoization, heavy imports, and more.
+
+---
+
+### ♻️ `/bro-refactor-this`
+Find refactoring opportunities and duplicated code.
+
+```bash
+# Analyze components
+/bro-refactor-this src/components/
+
+# Analyze entire project
 /bro-refactor-this
 
-# Explain architecture
+# Natural language
+/bro-refactor-this find duplicates in services
+/bro-refactor-this analyze the utils folder
+```
+
+Identifies duplicate code, similar logic, repeated functions, and naming inconsistencies.
+
+---
+
+### 🧭 `/bro-explain-this`
+Explain project architecture and flows.
+
+```bash
+# Explain entire project
 /bro-explain-this
 
-# Generate creative ideas or solve problems
-/bro-inspire-me improve the onboarding
-/bro-inspire-me the build takes too long
+# Explain specific module
+/bro-explain-this src/modules/payments/
+
+# Natural language
+/bro-explain-this how does the authentication work
+/bro-explain-this explain the API architecture
+/bro-explain-this what does the order service do
 ```
+
+Perfect for onboarding or understanding new codebases.
+
+---
+
+### 💡 `/bro-inspire-me`
+Generate creative ideas or solve technical problems.
+
+```bash
+# Creative ideas
+/bro-inspire-me new ways to monetize the app
+/bro-inspire-me ideas to improve user onboarding
+/bro-inspire-me features to differentiate from competition
+
+# Problem solving
+/bro-inspire-me the build takes too long
+/bro-inspire-me I have memory leaks in production
+/bro-inspire-me the database gets slow with many records
+/bro-inspire-me tests are flaky and fail randomly
+```
+
+Uses web search for inspiration and generates 5-10 ideas ordered from conservative to revolutionary.
 
 ---
 
