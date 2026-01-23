@@ -1,6 +1,6 @@
 {
   "name": "bro-code-tools",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Hey bro! Suite de herramientas de código para Claude Code. Code review, security, performance, refactoring y más. Soporta JS/TS, Python, Go, Rust, PHP, Ruby, Java, C#.",
   "author": {
     "name": "Dinnovos",
@@ -20,6 +20,10 @@
     "typescript",
     "python",
     "golang",
-    "rust"
+    "rust",
+    "standards",
+    "compliance",
+    "claude-md",
+    "agents-md"
   ]
 }

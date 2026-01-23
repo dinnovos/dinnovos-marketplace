@@ -23,6 +23,7 @@ Hey bro! Code analysis tools suite for Claude Code.
 | `/bro-refactor-this` | Find refactoring opportunities |
 | `/bro-explain-this` | Explain project architecture and flows |
 | `/bro-inspire-me` | Creative ideas and problem solutions |
+| `/bro-check-standards` | Audit architecture and CLAUDE.md/AGENTS.md compliance |
 
 ---
 
@@ -196,6 +197,53 @@ Uses web search for inspiration and generates 5-10 ideas ordered from conservati
 
 ---
 
+### 📐 `/bro-check-standards`
+Audit project architecture and validate compliance with CLAUDE.md, AGENTS.md, and other standards files.
+
+```bash
+# Audit entire project
+/bro-check-standards
+
+# Audit specific module
+/bro-check-standards src/modules/auth/
+
+# Natural language
+/bro-check-standards check if services follow the architecture
+/bro-check-standards validate naming conventions in components
+/bro-check-standards audit compliance of the payments module
+```
+
+**What it analyzes:**
+- 📁 **Folder structure** compliance with documented standards
+- 📝 **Naming conventions** (files, functions, classes, constants)
+- 📦 **Import conventions** (order, aliases, extensions)
+- 🔷 **Type conventions** (strict mode, no `any`, interfaces vs types)
+- 🏗️ **Architectural patterns** (Clean Architecture, MVC, Hexagonal, etc.)
+- 🔗 **Dependency rules** (layer boundaries, circular dependencies, forbidden imports)
+- 📊 **Code metrics** (cyclomatic complexity, coupling, cohesion, LCOM)
+- 🔧 **Over-engineering detection** (unnecessary abstractions, excessive layers)
+- 📚 **Documentation** (README, JSDoc, type definitions)
+
+**Standards files supported:**
+- `CLAUDE.md` / `AGENTS.md` (primary)
+- `.cursorrules` / `.cursor/rules/*.md`
+- `.github/copilot-instructions.md`
+- `.continuerules` / `.continue/rules/*.md`
+- `ARCHITECTURE.md`, `CONTRIBUTING.md`, `ADR/*.md`
+
+**Output includes:**
+- Compliance percentage per category
+- Detailed violations with exact rule quoted
+- Remediation steps for each violation
+- Code metrics summary (complexity, coupling, cohesion)
+- Dependency analysis (layer violations, circular deps)
+- Architecture diagram of current state
+- Prioritized remediation plan
+
+If no standards files exist, offers to generate a starter `CLAUDE.md` template.
+
+---
+
 ## 📁 Plugin Structure
 
 ```
@@ -210,7 +258,8 @@ bro-code-tools/
     ├── bro-this-is-slow.md
     ├── bro-refactor-this.md
     ├── bro-explain-this.md
-    └── bro-inspire-me.md
+    ├── bro-inspire-me.md
+    └── bro-check-standards.md
 ```
 
 ---
